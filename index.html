@@ -15,6 +15,13 @@
 <script type="text/javascript">
 let seal;
 let icehole;
+let score = 0;
+let fpc = 1; // fish per click
+let fps = 0; // idle fish gained per second
+let i = 0; // index of fish pool
+let numFish = 10; // # of fish in the pool
+let fishPool = [];
+let scoreBoard;
 
 var config = {
     type: Phaser.AUTO,
@@ -48,25 +55,47 @@ function create ()
 {
     //  A simple background for our game
     this.add.image(400, 300, 'sky');
+    scoreBoard = this.add.text(20, 30, 'Fish: ' + score, {
+        fontFamily: 'serif', 
+        fontSize: '24px'
+    });
     icehole = this.add.image(300, 100, 'icehole').setInteractive();
     seal = this.add.image(400, 300, 'seal').setScale(0.25);
 
-    this.fishPool = this.add.group();
-    var fish;
-    for (var d=0; d<50; d++) {
-        fish = this.add.image(100, 100, 'fish');
+    for (let d = 0; d < numFish; d++) {
+        let fish = this.add.image(850, 650, 'fish');
+        fishPool.push(fish);
     }
-    this.fishPool.add(fish);
 
     icehole.on('pointerdown', () => {
-        console.log("clig");
+        score+=fpc;
+        if(i == numFish){
+            i = 0;
+        }
+        let thisFish = fishPool[i];
+        i++;
+        thisFish.setPosition(300, 100);
+        var tween = this.tweens.add({
+            targets: thisFish,
+            x: 300 + (Math.random() * 100) * (Math.random() < 0.5 ? -1 : 1),
+            y: 80 - (Math.random() * 70),
+            ease: 'Cubic',
+            alpha: 0,
+            duration: 700,
+            repeat: 0,
+            yoyo: false,
+            onComplete: function(){
+                thisFish.setPosition(850, 650);
+                thisFish.alpha = 1;
+            }
+        });
     });
 
 }
 
 function update ()
 {
-
+    scoreBoard.setText('Fish: ' + score);
 }
 
 
