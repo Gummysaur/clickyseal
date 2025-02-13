@@ -3,7 +3,7 @@
 <head> 
     <meta charset="UTF-8" />
     <title>ClickySeal</title>
-    <script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@v3.88.0/dist/phaser.js"></script>
     <style type="text/css">
         body {
             margin: 0;
@@ -53,7 +53,6 @@ function preload ()
 
 function create ()
 {
-    //  A simple background for our game
     this.add.image(400, 300, 'sky');
     scoreBoard = this.add.text(20, 30, 'Fish: ' + score, {
         fontFamily: 'serif', 
@@ -61,12 +60,39 @@ function create ()
     });
     icehole = this.add.image(300, 100, 'icehole').setInteractive();
     seal = this.add.image(400, 300, 'seal').setScale(0.25);
+    let upgrade1 = this.add.rectangle(300, 300, 100, 100, 0xffffff).setInteractive();
+    let toolTip =  this.add.rectangle( 0, 0, 250, 50, 0xffffff).setOrigin(0);
+    let toolTipText = this.add.text( 0, 0, 'This is an upgrade', { fontFamily: 'Arial', color: '#000' }).setOrigin(0);
+    toolTip.alpha = 0;
+
+    this.input.setPollOnMove();
+    this.input.on('gameobjectover', function (pointer, gameObject) {
+        this.tweens.add({
+          targets: [toolTip, toolTipText],
+          alpha: {from:0, to:1},
+          repeat: 0,
+          duration: 500
+      });
+    }, this);
+
+    this.input.on('gameobjectout', function (pointer, gameObject) {
+        toolTip.alpha = 0;
+        toolTipText.alpha = 0;
+    });
+    
+    upgrade1.on('pointermove', function (pointer) {
+        toolTip.x = pointer.x;
+        toolTip.y = pointer.y;
+        toolTipText.x = pointer.x + 5;
+        toolTipText.y = pointer.y + 5;
+    });
 
     for (let d = 0; d < numFish; d++) {
         let fish = this.add.image(850, 650, 'fish');
         fishPool.push(fish);
     }
 
+    // give fish when you click the ice hole
     icehole.on('pointerdown', () => {
         score+=fpc;
         if(i == numFish){
@@ -75,10 +101,10 @@ function create ()
         let thisFish = fishPool[i];
         i++;
         thisFish.setPosition(300, 100);
-        var tween = this.tweens.add({
+        this.tweens.add({
             targets: thisFish,
-            x: 300 + (Math.random() * 100) * (Math.random() < 0.5 ? -1 : 1),
-            y: 80 - (Math.random() * 70),
+            x: 300 + (Math.random() * 30) * (Math.random() < 0.5 ? -1 : 1),
+            y: 80 - (Math.random() * 50),
             ease: 'Cubic',
             alpha: 0,
             duration: 700,
@@ -90,6 +116,8 @@ function create ()
             }
         });
     });
+
+
 
 }
 
