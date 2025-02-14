@@ -22,6 +22,15 @@ let i = 0; // index of fish pool
 let numFish = 10; // # of fish in the pool
 let fishPool = [];
 let scoreBoard;
+let fpsUpgradeLvl = 0; // level of FPS upgrade
+let fpsUpgradeCost = 10; // how much it costs to upgrade FPS
+let fpcUpgradeLvl = 0;
+let fpcUpgradeCost = 5;
+let timer = 0;
+let fpsUpgrade; // sprite of the fps upgrade
+let fpcUpgrade;
+let toolTip;
+let toolTipText;
 
 var config = {
     type: Phaser.AUTO,
@@ -60,12 +69,17 @@ function create ()
     });
     icehole = this.add.image(300, 100, 'icehole').setInteractive();
     seal = this.add.image(400, 300, 'seal').setScale(0.25);
-    let upgrade1 = this.add.rectangle(300, 300, 100, 100, 0xffffff).setInteractive();
-    let toolTip =  this.add.rectangle( 0, 0, 250, 50, 0xffffff).setOrigin(0);
-    let toolTipText = this.add.text( 0, 0, 'This is an upgrade', { fontFamily: 'Arial', color: '#000' }).setOrigin(0);
-    toolTip.alpha = 0;
+
+    fpsUpgrade = this.add.rectangle(300, 500, 100, 100, 0xffffff).setInteractive();
+    fpcUpgrade = this.add.rectangle(500, 500, 100, 100, 0x00ff00).setInteractive();
+    toolTip =  this.add.rectangle(900, 700, 300, 100, 0xffffff).setOrigin(0);
+    toolTipText = this.add.text(900, 700, 
+        '  Fisherman:\nIncreases idle fish gained per second. \n Costs ' + fpsUpgradeCost + ' fish.', 
+        { fontFamily: 'Arial', color: '#000' }).setOrigin(0);
 
     this.input.setPollOnMove();
+
+    /*
     this.input.on('gameobjectover', function (pointer, gameObject) {
         this.tweens.add({
           targets: [toolTip, toolTipText],
@@ -74,17 +88,45 @@ function create ()
           duration: 500
       });
     }, this);
+    */
 
     this.input.on('gameobjectout', function (pointer, gameObject) {
-        toolTip.alpha = 0;
-        toolTipText.alpha = 0;
+        toolTip.setPosition(900, 700);
+        toolTipText.setPosition(900, 700);
     });
     
-    upgrade1.on('pointermove', function (pointer) {
+    fpsUpgrade.on('pointermove', function (pointer, x, y, event) {
+        toolTipText.setText('  Fisherman:\nIncreases idle fish gained per second. \n Costs ' + fpsUpgradeCost + ' fish.');
         toolTip.x = pointer.x;
         toolTip.y = pointer.y;
         toolTipText.x = pointer.x + 5;
         toolTipText.y = pointer.y + 5;
+    });
+
+    fpcUpgrade.on('pointermove', function (pointer, x, y, event) {
+        toolTipText.setText('  Bait:\nIncreases fish gained per click. \n Costs ' + fpcUpgradeCost + ' fish.');
+        toolTip.x = pointer.x;
+        toolTip.y = pointer.y;
+        toolTipText.x = pointer.x + 5;
+        toolTipText.y = pointer.y + 5;
+    });
+
+    fpsUpgrade.on('pointerdown', () => {
+        if(score >= fpsUpgradeCost){
+            score -= fpsUpgradeCost;
+            fpsUpgradeLvl++;
+            fps = fpsUpgradeLvl * 5;
+            fpsUpgradeCost+=10;
+        }
+    });
+
+    fpcUpgrade.on('pointerdown', () => {
+        if(score >= fpcUpgradeCost){
+            score -= fpcUpgradeCost;
+            fpcUpgradeLvl++;
+            fpc = fpcUpgradeLvl * 3;
+            fpcUpgradeCost+=10;
+        }
     });
 
     for (let d = 0; d < numFish; d++) {
@@ -121,8 +163,14 @@ function create ()
 
 }
 
-function update ()
+function update (time, delta)
 {
+    timer += delta;
+    while (timer > 1000) {
+        score += fps;
+        timer -= 1000;
+    }
+
     scoreBoard.setText('Fish: ' + score);
 }
 
