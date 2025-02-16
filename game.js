@@ -1,0 +1,208 @@
+import Upgrade from "./Upgrade.js";
+let seal;
+let icehole;
+let score = 0;
+let fpc = 1; // fish per click
+let fps = 0; // idle fish gained per second
+let i = 0; // index of fish pool
+let numFish = 10; // # of fish in the pool
+let fishPool = [];
+let scoreBoard;
+let timer = 0;
+let toolTip;
+let toolTipText;
+let upgradeText; // little 'upgraded!' that pops up 
+
+let fpsUpgrade;
+let fpcUpgrade;
+
+var config = {
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 300 },
+            debug: false
+        }
+    },
+    scene: {
+        preload: preload,
+        create: create,
+        update: update
+    }
+};
+
+var game = new Phaser.Game(config);
+
+function preload ()
+{
+    this.load.image('sky', 'assets/sky.png');
+    this.load.image('icehole', 'assets/icehole.png');
+    this.load.image('seal', 'assets/seal.png');
+    this.load.image('fish', 'assets/fish.png');
+}
+
+function create ()
+{
+    this.add.image(400, 300, 'sky');
+    scoreBoard = this.add.text(20, 30, 'Fish: ' + score, {
+        fontFamily: 'serif', 
+        fontSize: '24px'
+    });
+    icehole = this.add.image(300, 100, 'icehole').setInteractive();
+    seal = this.add.image(400, 300, 'seal').setScale(0.25);
+
+    fpsUpgrade = new Upgrade(10, 
+        this.add.rectangle(300, 500, 100, 100, 0xffffff).setInteractive(),
+        '  Fisherman:\nIncreases idle fish gained per second. \n Costs 10 fish.',   
+    );
+
+    fpcUpgrade = new Upgrade(5,
+        this.add.rectangle(500, 500, 100, 100, 0x00ff00).setInteractive(),
+        '  Bait:\nIncreases fish gained per click. \n Costs 5 fish.'
+    );
+
+    toolTip =  this.add.rectangle(900, 700, 300, 100, 0xffffff).setOrigin(0);
+    toolTipText = this.add.text(900, 700, 'placeholder', { fontFamily: 'Arial', color: '#000' }).setOrigin(0);
+    upgradeText = this.add.text(900, 700, 'Upgraded!', { fontFamily: 'Arial', color: '#000' }).setOrigin(0);
+    this.input.setPollOnMove();
+
+    /*
+    this.input.on('gameobjectover', function (pointer, gameObject) {
+        this.tweens.add({
+          targets: [toolTip, toolTipText],
+          alpha: {from:0, to:1},
+          repeat: 0,
+          duration: 500
+      });
+    }, this);
+    */
+
+    this.input.on('gameobjectout', function (pointer, gameObject) {
+        fpsUpgrade.hover = false;
+        fpcUpgrade.hover = false;
+        toolTip.setPosition(900, 700);
+        toolTipText.setPosition(900, 700);
+    });
+    
+    fpsUpgrade.sprite.on('pointermove', function (pointer, x, y, event) {
+        toolTipText.setText(fpsUpgrade.text);
+        fpsUpgrade.hover = true;
+        toolTip.x = pointer.x;
+        toolTip.y = pointer.y;
+        toolTipText.x = pointer.x + 5;
+        toolTipText.y = pointer.y + 5;
+    });
+
+    fpcUpgrade.sprite.on('pointermove', function (pointer, x, y, event) {
+        toolTipText.setText(fpcUpgrade.text);
+        fpcUpgrade.hover = true;
+        toolTip.x = pointer.x;
+        toolTip.y = pointer.y;
+        toolTipText.x = pointer.x + 5;
+        toolTipText.y = pointer.y + 5;
+    });
+
+    fpsUpgrade.sprite.on('pointerdown', () => {
+        if(score >= fpsUpgrade.cost){
+            score -= fpsUpgrade.cost;
+            fpsUpgrade.level++;
+            fps = fpsUpgrade.level * 5;
+            fpsUpgrade.cost+=10;
+
+            upgradeText.setPosition(fpsUpgrade.sprite.x, fpsUpgrade.sprite.y);
+            this.tweens.add({
+                targets: upgradeText,
+                y: fpsUpgrade.sprite.y - 100,
+                ease: 'Cubic',
+                alpha: 0,
+                duration: 700,
+                repeat: 0,
+                yoyo: false,
+                onComplete: function(){
+                    upgradeText.setPosition(900, 700);
+                    upgradeText.alpha = 1;
+                }
+            });
+        }
+    });
+
+    fpcUpgrade.sprite.on('pointerdown', () => {
+        if(score >= fpcUpgrade.cost){
+            score -= fpcUpgrade.cost;
+            fpcUpgrade.level++;
+            fpc = fpcUpgrade.level * 3;
+            fpcUpgrade.cost+=10;
+
+            upgradeText.setPosition(fpcUpgrade.sprite.x, fpcUpgrade.sprite.y);
+            this.tweens.add({
+                targets: upgradeText,
+                y: fpcUpgrade.sprite.y - 100,
+                ease: 'Cubic',
+                alpha: 0,
+                duration: 700,
+                repeat: 0,
+                yoyo: false,
+                onComplete: function(){
+                    upgradeText.setPosition(900, 700);
+                    upgradeText.alpha = 1;
+                }
+            });
+        }
+    });
+
+    for (let d = 0; d < numFish; d++) {
+        let fish = this.add.image(850, 650, 'fish');
+        fishPool.push(fish);
+    }
+
+    // give fish when you click the ice hole
+    icehole.on('pointerdown', () => {
+        score+=fpc;
+        if(i == numFish){
+            i = 0;
+        }
+        let thisFish = fishPool[i];
+        i++;
+        thisFish.setPosition(300, 100);
+        this.tweens.add({
+            targets: thisFish,
+            x: 300 + (Math.random() * 30) * (Math.random() < 0.5 ? -1 : 1),
+            y: 80 - (Math.random() * 50),
+            ease: 'Cubic',
+            alpha: 0,
+            duration: 700,
+            repeat: 0,
+            yoyo: false,
+            onComplete: function(){
+                thisFish.setPosition(850, 650);
+                thisFish.alpha = 1;
+            }
+        });
+    });
+
+
+
+}
+
+function update (time, delta)
+{
+    timer += delta;
+    while (timer > 1000) {
+        score += fps;
+        timer -= 1000;
+    }
+
+    if(fpsUpgrade.hover){
+        toolTipText.setText('  Fisherman:\nIncreases idle fish gained per second. \n Costs ' + fpsUpgrade.cost + ' fish.',   
+        )
+    }    
+    if(fpcUpgrade.hover){
+        toolTipText.setText('  Bait:\nIncreases fish gained per click. \n Costs ' + fpcUpgrade.cost + ' fish.'
+        )
+    }
+
+    scoreBoard.setText('Fish: ' + score);
+}
