@@ -15,6 +15,7 @@ let upgradeText; // little 'upgraded!' that pops up
 
 let fpsUpgrade;
 let fpcUpgrade;
+let yochanUpgrade;
 
 var config = {
     type: Phaser.AUTO,
@@ -42,6 +43,7 @@ function preload ()
     this.load.image('icehole', 'assets/icehole.png');
     this.load.image('seal', 'assets/seal.png');
     this.load.image('fish', 'assets/fish.png');
+    this.load.image('yochan', 'assets/yochan.png');
 }
 
 function create ()
@@ -55,14 +57,19 @@ function create ()
     seal = this.add.image(400, 300, 'seal').setScale(0.25);
 
     fpsUpgrade = new Upgrade(10, 
-        this.add.rectangle(300, 500, 100, 100, 0xffffff).setInteractive(),
+        this.add.rectangle(100, 500, 100, 100, 0xffffff).setInteractive(),
         '  Fisherman:\nIncreases idle fish gained per second. \n Costs 10 fish.',   
     );
 
     fpcUpgrade = new Upgrade(5,
-        this.add.rectangle(500, 500, 100, 100, 0x00ff00).setInteractive(),
+        this.add.rectangle(300, 500, 100, 100, 0x00ff00).setInteractive(),
         '  Bait:\nIncreases fish gained per click. \n Costs 5 fish.'
     );
+
+    yochanUpgrade = new Upgrade(100,
+        this.add.rectangle(500, 500, 100, 100, 0x0000ff).setInteractive(),
+        '  Seal: A new seal for you! \n Costs 100 fish.'
+    )
 
     toolTip =  this.add.rectangle(900, 700, 300, 100, 0xffffff).setOrigin(0);
     toolTipText = this.add.text(900, 700, 'placeholder', { fontFamily: 'Arial', color: '#000' }).setOrigin(0);
@@ -83,26 +90,21 @@ function create ()
     this.input.on('gameobjectout', function (pointer, gameObject) {
         fpsUpgrade.hover = false;
         fpcUpgrade.hover = false;
+        yochanUpgrade.hover = false;
         toolTip.setPosition(900, 700);
         toolTipText.setPosition(900, 700);
     });
     
     fpsUpgrade.sprite.on('pointermove', function (pointer, x, y, event) {
-        toolTipText.setText(fpsUpgrade.text);
-        fpsUpgrade.hover = true;
-        toolTip.x = pointer.x;
-        toolTip.y = pointer.y;
-        toolTipText.x = pointer.x + 5;
-        toolTipText.y = pointer.y + 5;
+        fpsUpgrade.onHover(toolTip, toolTipText, pointer);
     });
 
     fpcUpgrade.sprite.on('pointermove', function (pointer, x, y, event) {
-        toolTipText.setText(fpcUpgrade.text);
-        fpcUpgrade.hover = true;
-        toolTip.x = pointer.x;
-        toolTip.y = pointer.y;
-        toolTipText.x = pointer.x + 5;
-        toolTipText.y = pointer.y + 5;
+        fpcUpgrade.onHover(toolTip, toolTipText, pointer);
+    });
+
+    yochanUpgrade.sprite.on('pointermove', function (pointer, x, y, event) {
+        yochanUpgrade.onHover(toolTip, toolTipText, pointer);
     });
 
     fpsUpgrade.sprite.on('pointerdown', () => {
@@ -150,6 +152,17 @@ function create ()
                     upgradeText.alpha = 1;
                 }
             });
+        }
+    });
+
+    yochanUpgrade.sprite.on('pointerdown', () => {
+        if(score >= yochanUpgrade.cost){
+            score -= yochanUpgrade.cost;
+            yochanUpgrade.level++;
+            this.add.image(200, 300, 'yochan').setScale(0.1);
+            yochanUpgrade.sprite.destroy();
+            toolTip.setPosition(900, 700);
+            toolTipText.setPosition(900, 700);
         }
     });
 
