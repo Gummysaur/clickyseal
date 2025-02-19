@@ -5,17 +5,19 @@ let score = 0;
 let fpc = 1; // fish per click
 let fps = 0; // idle fish gained per second
 let i = 0; // index of fish pool
-let numFish = 10; // # of fish in the pool
+let clickBuffer = 10; // # of fish/upgrade popup text in the pool
 let fishPool = [];
+let upgradeTxtPool = [];
 let scoreBoard;
 let timer = 0;
 let toolTip;
 let toolTipText;
-let upgradeText; // little 'upgraded!' that pops up 
 
 let fpsUpgrade;
 let fpcUpgrade;
 let yochanUpgrade;
+
+let sc;
 
 var config = {
     type: Phaser.AUTO,
@@ -39,6 +41,7 @@ var game = new Phaser.Game(config);
 
 function preload ()
 {
+    sc = this;
     this.load.image('sky', 'assets/sky.png');
     this.load.image('icehole', 'assets/icehole.png');
     this.load.image('seal', 'assets/seal.png');
@@ -73,19 +76,13 @@ function create ()
 
     toolTip =  this.add.rectangle(900, 700, 300, 100, 0xffffff).setOrigin(0);
     toolTipText = this.add.text(900, 700, 'placeholder', { fontFamily: 'Arial', color: '#000' }).setOrigin(0);
-    upgradeText = this.add.text(900, 700, 'Upgraded!', { fontFamily: 'Arial', color: '#000' }).setOrigin(0);
+    
+    for (let d = 0; d < clickBuffer; d++) {
+        let upgradeText = this.add.text(900, 700, 'Upgraded!', { fontFamily: 'Arial', color: '#000' }).setOrigin(0);
+        upgradeTxtPool.push(upgradeText);
+    }    
+    
     this.input.setPollOnMove();
-
-    /*
-    this.input.on('gameobjectover', function (pointer, gameObject) {
-        this.tweens.add({
-          targets: [toolTip, toolTipText],
-          alpha: {from:0, to:1},
-          repeat: 0,
-          duration: 500
-      });
-    }, this);
-    */
 
     this.input.on('gameobjectout', function (pointer, gameObject) {
         fpsUpgrade.hover = false;
@@ -114,20 +111,7 @@ function create ()
             fps = fpsUpgrade.level * 5;
             fpsUpgrade.cost+=10;
 
-            upgradeText.setPosition(fpsUpgrade.sprite.x, fpsUpgrade.sprite.y);
-            this.tweens.add({
-                targets: upgradeText,
-                y: fpsUpgrade.sprite.y - 100,
-                ease: 'Cubic',
-                alpha: 0,
-                duration: 700,
-                repeat: 0,
-                yoyo: false,
-                onComplete: function(){
-                    upgradeText.setPosition(900, 700);
-                    upgradeText.alpha = 1;
-                }
-            });
+            printUpgradedText(fpsUpgrade);
         }
     });
 
@@ -138,20 +122,7 @@ function create ()
             fpc = fpcUpgrade.level * 3;
             fpcUpgrade.cost+=10;
 
-            upgradeText.setPosition(fpcUpgrade.sprite.x, fpcUpgrade.sprite.y);
-            this.tweens.add({
-                targets: upgradeText,
-                y: fpcUpgrade.sprite.y - 100,
-                ease: 'Cubic',
-                alpha: 0,
-                duration: 700,
-                repeat: 0,
-                yoyo: false,
-                onComplete: function(){
-                    upgradeText.setPosition(900, 700);
-                    upgradeText.alpha = 1;
-                }
-            });
+            printUpgradedText(fpcUpgrade);
         }
     });
 
@@ -166,7 +137,7 @@ function create ()
         }
     });
 
-    for (let d = 0; d < numFish; d++) {
+    for (let d = 0; d < clickBuffer; d++) {
         let fish = this.add.image(850, 650, 'fish');
         fishPool.push(fish);
     }
@@ -174,7 +145,7 @@ function create ()
     // give fish when you click the ice hole
     icehole.on('pointerdown', () => {
         score+=fpc;
-        if(i == numFish){
+        if(i == clickBuffer){
             i = 0;
         }
         let thisFish = fishPool[i];
@@ -218,4 +189,26 @@ function update (time, delta)
     }
 
     scoreBoard.setText('Fish: ' + score);
+}
+
+function printUpgradedText(upgrade){
+    if(i == clickBuffer){
+        i = 0;
+    }
+    let thisText = upgradeTxtPool[i];
+    i++;
+    thisText.setPosition(upgrade.sprite.x, upgrade.sprite.y);
+    sc.tweens.add({
+        targets: thisText,
+        y: upgrade.sprite.y - 100,
+        ease: 'Cubic',
+        alpha: 0,
+        duration: 700,
+        repeat: 0,
+        yoyo: false,
+        onComplete: function(){
+            thisText.setPosition(900, 700);
+            thisText.alpha = 1;
+        }
+    });
 }

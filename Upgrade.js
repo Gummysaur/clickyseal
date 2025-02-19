@@ -22,5 +22,4 @@ export default class Upgrade {
         toolTipText.x = pointer.x + 5;
         toolTipText.y = pointer.y + 5;
     }
-
 }
