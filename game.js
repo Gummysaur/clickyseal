@@ -9,6 +9,8 @@ let clickBuffer = 10; // # of fish/upgrade popup text in the pool
 let fishPool = [];
 let upgradeTxtPool = [];
 let scoreBoard;
+let fpsBoard;
+let fpcBoard;
 let timer = 0;
 let toolTip;
 let toolTipText;
@@ -55,6 +57,14 @@ function create ()
     scoreBoard = this.add.text(20, 30, 'Fish: ' + score, {
         fontFamily: 'serif', 
         fontSize: '24px'
+    });
+    fpsBoard = this.add.text(20, 50, '  per second: ' + fps, {
+        fontFamily: 'serif',
+        fontSize: '18px'
+    });
+    fpcBoard = this.add.text(20, 70, '  per click: ' + fpc, {
+        fontFamily: 'serif',
+        fontSize: '18px'
     });
     icehole = this.add.image(300, 100, 'icehole').setInteractive();
     seal = this.add.image(400, 300, 'seal').setScale(0.25);
@@ -189,6 +199,8 @@ function update (time, delta)
     }
 
     scoreBoard.setText('Fish: ' + score);
+    fpsBoard.setText('  per second: ' + fps);
+    fpcBoard.setText('  per click: ' + fpc);
 }
 
 function printUpgradedText(upgrade){
