@@ -8,6 +8,7 @@ let i = 0; // index of fish pool
 let clickBuffer = 10; // # of fish/upgrade popup text in the pool
 let fishPool = [];
 let upgradeTxtPool = [];
+let fpcPool = [];
 let scoreBoard;
 let fpsBoard;
 let fpcBoard;
@@ -90,7 +91,12 @@ function create ()
     for (let d = 0; d < clickBuffer; d++) {
         let upgradeText = this.add.text(900, 700, 'Upgraded!', { fontFamily: 'Arial', color: '#000' }).setOrigin(0);
         upgradeTxtPool.push(upgradeText);
-    }    
+    }
+    
+    for(let c = 0; c < clickBuffer + 10; c++){
+        let fpcText = this.add.text(900, 700, '+' + fpc, {fontFamily: 'Arial', color: '#000'}).setOrigin(0);
+        fpcPool.push(fpcText);
+    }
     
     this.input.setPollOnMove();
 
@@ -118,7 +124,7 @@ function create ()
         if(score >= fpsUpgrade.cost){
             score -= fpsUpgrade.cost;
             fpsUpgrade.level++;
-            fps = fpsUpgrade.level * 5;
+            fps = fpsUpgrade.level + 1;
             fpsUpgrade.cost+=10;
 
             printUpgradedText(fpsUpgrade);
@@ -129,7 +135,7 @@ function create ()
         if(score >= fpcUpgrade.cost){
             score -= fpcUpgrade.cost;
             fpcUpgrade.level++;
-            fpc = fpcUpgrade.level * 3;
+            fpc = fpcUpgrade.level + 2;
             fpcUpgrade.cost+=10;
 
             printUpgradedText(fpcUpgrade);
@@ -159,8 +165,10 @@ function create ()
             i = 0;
         }
         let thisFish = fishPool[i];
+        let thisFpc = fpcPool[i];
         i++;
         thisFish.setPosition(300, 100);
+        thisFpc.setPosition(300, 100);
         this.tweens.add({
             targets: thisFish,
             x: 300 + (Math.random() * 30) * (Math.random() < 0.5 ? -1 : 1),
@@ -175,6 +183,19 @@ function create ()
                 thisFish.alpha = 1;
             }
         });
+        this.tweens.add({
+            targets: thisFpc,
+            y: 50,
+            ease: 'Linear',
+            alpha: 0,
+            duration: 900,
+            repeat: 0,
+            yoyo: false,
+            onComplete: function(){
+                thisFpc.setPosition(850, 650);
+                thisFpc.alpha = 1;
+            }
+        })
     });
 
 
@@ -201,6 +222,9 @@ function update (time, delta)
     scoreBoard.setText('Fish: ' + score);
     fpsBoard.setText('  per second: ' + fps);
     fpcBoard.setText('  per click: ' + fpc);
+    for(let c = 0; c < clickBuffer; c++){
+        fpcPool[c].setText('+' + fpc);
+    }
 }
 
 function printUpgradedText(upgrade){
