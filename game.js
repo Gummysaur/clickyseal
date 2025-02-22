@@ -11,7 +11,6 @@ let upgradeTxtPool = [];
 let fpcPool = [];
 let scoreBoard;
 let fpsBoard;
-let fpcBoard;
 let timer = 0;
 let toolTip;
 let toolTipText;
@@ -63,10 +62,7 @@ function create ()
         fontFamily: 'serif',
         fontSize: '18px'
     });
-    fpcBoard = this.add.text(20, 70, '  per click: ' + fpc, {
-        fontFamily: 'serif',
-        fontSize: '18px'
-    });
+
     icehole = this.add.image(300, 100, 'icehole').setInteractive();
     seal = this.add.image(400, 300, 'seal').setScale(0.25);
 
@@ -94,7 +90,10 @@ function create ()
     }
     
     for(let c = 0; c < clickBuffer + 10; c++){
-        let fpcText = this.add.text(900, 700, '+' + fpc, {fontFamily: 'Arial', color: '#000'}).setOrigin(0);
+        let fpcText = this.add.text(900, 700, '+' + fpc, 
+            {fontFamily: 'Arial', color: '#000', fontSize: '24px', fontStyle: 'bold',
+                stroke: '#fff', strokeThickness: 10
+            }).setOrigin(0);
         fpcPool.push(fpcText);
     }
     
@@ -168,7 +167,7 @@ function create ()
         let thisFpc = fpcPool[i];
         i++;
         thisFish.setPosition(300, 100);
-        thisFpc.setPosition(300, 100);
+        thisFpc.setPosition(280, 100);
         this.tweens.add({
             targets: thisFish,
             x: 300 + (Math.random() * 30) * (Math.random() < 0.5 ? -1 : 1),
@@ -221,7 +220,6 @@ function update (time, delta)
 
     scoreBoard.setText('Fish: ' + score);
     fpsBoard.setText('  per second: ' + fps);
-    fpcBoard.setText('  per click: ' + fpc);
     for(let c = 0; c < clickBuffer; c++){
         fpcPool[c].setText('+' + fpc);
     }
