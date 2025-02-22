@@ -1,7 +1,11 @@
 import Upgrade from "./Upgrade.js";
-let seal;
+import Seal from "./Seal.js";
+let kyoro;
+let yochan;
+
 let icehole;
 let score = 0;
+let scoreAllTime = 0;
 let fpc = 1; // fish per click
 let fps = 0; // idle fish gained per second
 let i = 0; // index of fish pool
@@ -49,6 +53,7 @@ function preload ()
     this.load.image('seal', 'assets/seal.png');
     this.load.image('fish', 'assets/fish.png');
     this.load.image('yochan', 'assets/yochan.png');
+    this.load.image('babyseal', 'assets/babyseal.png');
 }
 
 function create ()
@@ -64,20 +69,26 @@ function create ()
     });
 
     icehole = this.add.image(300, 100, 'icehole').setInteractive();
-    seal = this.add.image(400, 300, 'seal').setScale(0.25);
+
+    kyoro = new Seal("Kyoro", "Spotted Seal", 'Female', -1, ' ',
+        this.add.image(400, 300, 'seal').setScale(0.4).setInteractive()
+    )
+    yochan = yochan = new Seal("Yochan", "Ringed Seal", "Female", 500, ' ',
+        this.add.image(900, 300, 'babyseal').setScale(0.08).setInteractive()
+    )
 
     fpsUpgrade = new Upgrade(10, 
-        this.add.rectangle(100, 500, 100, 100, 0xffffff).setInteractive(),
-        '  Fisherman:\nIncreases idle fish gained per second. \n Costs 10 fish.',   
+        this.add.rectangle(100, 475, 100, 100, 0xffffff).setInteractive(),
+        '  '   
     );
 
     fpcUpgrade = new Upgrade(5,
-        this.add.rectangle(300, 500, 100, 100, 0x00ff00).setInteractive(),
-        '  Bait:\nIncreases fish gained per click. \n Costs 5 fish.'
+        this.add.rectangle(250, 475, 100, 100, 0x00ff00).setInteractive(),
+        '  '
     );
 
     yochanUpgrade = new Upgrade(100,
-        this.add.rectangle(500, 500, 100, 100, 0x0000ff).setInteractive(),
+        this.add.rectangle(400, 475, 100, 100, 0x0000ff).setInteractive(),
         '  Seal: A new seal for you! \n Costs 100 fish.'
     )
 
@@ -103,6 +114,8 @@ function create ()
         fpsUpgrade.hover = false;
         fpcUpgrade.hover = false;
         yochanUpgrade.hover = false;
+        kyoro.hover = false;
+        yochan.hover = false;
         toolTip.setPosition(900, 700);
         toolTipText.setPosition(900, 700);
     });
@@ -119,11 +132,19 @@ function create ()
         yochanUpgrade.onHover(toolTip, toolTipText, pointer);
     });
 
+    kyoro.sprite.on('pointermove', function (pointer, x, y, event){
+        kyoro.onHover(toolTip, toolTipText, pointer);
+    })
+
+    yochan.sprite.on('pointermove', function(pointer, x, y, event){
+        yochan.onHover(toolTip, toolTipText, pointer);
+    })
+
     fpsUpgrade.sprite.on('pointerdown', () => {
         if(score >= fpsUpgrade.cost){
             score -= fpsUpgrade.cost;
             fpsUpgrade.level++;
-            fps = fpsUpgrade.level + 1;
+            fps+=1;
             fpsUpgrade.cost+=10;
 
             printUpgradedText(fpsUpgrade);
@@ -134,7 +155,7 @@ function create ()
         if(score >= fpcUpgrade.cost){
             score -= fpcUpgrade.cost;
             fpcUpgrade.level++;
-            fpc = fpcUpgrade.level + 2;
+            fpc+=1;
             fpcUpgrade.cost+=10;
 
             printUpgradedText(fpcUpgrade);
@@ -145,7 +166,7 @@ function create ()
         if(score >= yochanUpgrade.cost){
             score -= yochanUpgrade.cost;
             yochanUpgrade.level++;
-            this.add.image(200, 300, 'yochan').setScale(0.1);
+            yochan.sprite.setPosition(200, 300);
             yochanUpgrade.sprite.destroy();
             toolTip.setPosition(900, 700);
             toolTipText.setPosition(900, 700);
@@ -160,6 +181,7 @@ function create ()
     // give fish when you click the ice hole
     icehole.on('pointerdown', () => {
         score+=fpc;
+        scoreAllTime+=fpc;
         if(i == clickBuffer){
             i = 0;
         }
@@ -206,16 +228,32 @@ function update (time, delta)
     timer += delta;
     while (timer > 1000) {
         score += fps;
+        scoreAllTime += fps;
         timer -= 1000;
     }
 
     if(fpsUpgrade.hover){
-        toolTipText.setText('  Fisherman:\nIncreases idle fish gained per second. \n Costs ' + fpsUpgrade.cost + ' fish.',   
-        )
+        toolTipText.setText('  Fisherman:\nProduces 1 fish per second. \n Costs ' 
+            + fpsUpgrade.cost + ' fish. \n Quantity: ' + fpsUpgrade.level   
+        );
     }    
     if(fpcUpgrade.hover){
-        toolTipText.setText('  Bait:\nIncreases fish gained per click. \n Costs ' + fpcUpgrade.cost + ' fish.'
-        )
+        toolTipText.setText('  Bait:\nGives +1 fish per click. \n Costs ' 
+            + fpcUpgrade.cost + ' fish. \n Quantity: ' + fpcUpgrade.level
+        );
+    }
+    if(kyoro.hover){
+        toolTipText.setText('Name: ' + kyoro.name + 
+            '\nSpecies: ' + kyoro.species +
+            '\nGender: ' + kyoro.gender +
+        '\n  A shy and curious seal.');
+    }
+    if(yochan.hover){
+        toolTipText.setText('Name: ' + yochan.name +
+            '\nSpecies: ' + yochan.species +
+            '\nGender: ' + kyoro.gender +
+            '\n  A spoiled diva.'
+        );
     }
 
     scoreBoard.setText('Fish: ' + score);
