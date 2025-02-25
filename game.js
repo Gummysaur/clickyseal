@@ -62,6 +62,7 @@ function preload ()
     this.load.spritesheet('kyorosprite', 'assets/kyorosprite.png', {frameWidth: 98, frameHeight: 98});
     this.load.spritesheet('babysprite', 'assets/babysprite.png', {frameWidth: 98, frameHeight: 98});
     this.load.spritesheet('iceholesprite', 'assets/iceholesprite.png', {frameWidth: 98, frameHeight: 98});
+    this.load.spritesheet('yochansprite', 'assets/yochansprite.png', {frameWidth: 98, frameHeight: 98});
 }
 
 function create ()
@@ -99,6 +100,15 @@ function create ()
         frameRate: 10,
         repeat: -1,
         repeatDelay: 7500
+    })
+
+    this.anims.create({
+        key: 'look',
+        frames: this.anims.generateFrameNumbers('yochansprite', {start: 0, end: 9}),
+        frameRate: 10,
+        repeat: -1,
+        repeatDelay: 5000,
+        yoyo: true
     })
 
     icehole = this.add.sprite(400, 175, 'iceholesprite').setInteractive({ useHandCursor: true });
@@ -210,6 +220,16 @@ function create ()
         }
     });
 
+    yochan.sprite.on('pointerdown', () => {
+        if(score >= yochan.lvlUpCost){
+            score -= yochan.lvlUpCost;
+            yochan.lvl++;
+            yochan.stage = 'adult';
+            yochan.sprite.setTexture('yochansprite');
+            yochan.sprite.anims.play('look');
+        }
+    })
+
     for (let d = 0; d < clickBuffer; d++) {
         let fish = this.add.image(850, 650, 'fish');
         fishPool.push(fish);
@@ -289,9 +309,16 @@ function update (time, delta)
     if(yochan.hover){
         toolTipText.setText('Name: ' + yochan.name +
             '\nSpecies: ' + yochan.species +
-            '\nGender: ' + kyoro.gender +
+            '\nGender: ' + yochan.gender +
             '\n  A spoiled diva.'
         );
+        if(yochan.stage === 'baby'){
+            toolTipText.appendText('Needs ' + yochan.lvlUpCost + ' fish to grow up.'
+            )
+        }
+        else if(yochan.stage === 'adult'){
+            toolTipText.appendText('All grown up!');
+        }
     }
 
     scoreBoard.setText('Fish: ' + score);
