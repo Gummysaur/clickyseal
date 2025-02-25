@@ -7,14 +7,17 @@ export default class Seal{
     text;
     sprite;
     hover;
+    stage;
 
-    constructor(name, species, gender, lvlUpCost, text, sprite){
+    constructor(name, species, gender, lvlUpCost, text, sprite, stage){
         this.name = name;
         this.species = species;
         this.gender = gender;
         this.lvlUpCost = lvlUpCost;
         this.text = text;
         this.sprite = sprite;
+        this.stage = stage;
+        this.hover = false;
     }
 
     onHover(toolTip, toolTipText, pointer){

@@ -60,6 +60,7 @@ function preload ()
     this.load.image('fisherman', 'assets/fisherman.PNG');
     this.load.image('newseal', 'assets/newseal.PNG');
     this.load.spritesheet('kyorosprite', 'assets/kyorosprite.png', {frameWidth: 98, frameHeight: 98});
+    this.load.spritesheet('babysprite', 'assets/babysprite.png', {frameWidth: 98, frameHeight: 98});
 }
 
 function create ()
@@ -77,7 +78,18 @@ function create ()
     this.anims.create({
         key: 'blink',
         frames: this.anims.generateFrameNumbers('kyorosprite', {start: 0, end: 10}),
-        frameRate: 10
+        frameRate: 10,
+        repeat: -1,
+        repeatDelay: 3500
+    });
+
+    this.anims.create({
+        key: 'yawn',
+        frames: this.anims.generateFrameNumbers('babysprite', {start: 0, end: 10}),
+        frameRate: 10,
+        repeat: -1,
+        repeatDelay: 5000,
+        yoyo: true
     });
 
     icehole = this.add.image(300, 100, 'icehole').setInteractive();
@@ -85,9 +97,12 @@ function create ()
     kyoro = new Seal("Kyoro", "Spotted Seal", 'Female', -1, ' ',
         this.add.sprite(400, 300, 'kyorosprite').setInteractive(), 'adult'
     )
+    kyoro.sprite.anims.play('blink');
+
     yochan = yochan = new Seal("Yochan", "Ringed Seal", "Female", 500, ' ',
-        this.add.image(900, 300, 'babyseal').setScale(0.08).setInteractive(), 'baby'
+        this.add.sprite(1000, 300, 'babysprite').setInteractive(), 'baby'
     )
+    yochan.sprite.anims.play('yawn');
 
     fpsUpgrade = new Upgrade(10, 
         this.add.image(100, 475, 'fisherman').setInteractive(),
@@ -243,11 +258,6 @@ function update (time, delta)
         score += fps;
         scoreAllTime += fps;
         timer -= 1000;
-    }
-
-    while (timer2 > 10000){
-        kyoro.sprite.anims.play('blink');
-        timer2 -= 10000;
     }
 
     if(fpsUpgrade.hover){
