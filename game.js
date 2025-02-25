@@ -61,6 +61,7 @@ function preload ()
     this.load.image('newseal', 'assets/newseal.PNG');
     this.load.spritesheet('kyorosprite', 'assets/kyorosprite.png', {frameWidth: 98, frameHeight: 98});
     this.load.spritesheet('babysprite', 'assets/babysprite.png', {frameWidth: 98, frameHeight: 98});
+    this.load.spritesheet('iceholesprite', 'assets/iceholesprite.png', {frameWidth: 98, frameHeight: 98});
 }
 
 function create ()
@@ -92,7 +93,16 @@ function create ()
         yoyo: true
     });
 
-    icehole = this.add.image(300, 100, 'icehole').setInteractive();
+    this.anims.create({
+        key: 'water',
+        frames: this.anims.generateFrameNumbers('iceholesprite', {start: 0, end: 11}),
+        frameRate: 10,
+        repeat: -1,
+        repeatDelay: 7500
+    })
+
+    icehole = this.add.sprite(400, 175, 'iceholesprite').setInteractive({ useHandCursor: true });
+    icehole.anims.play('water');
 
     kyoro = new Seal("Kyoro", "Spotted Seal", 'Female', -1, ' ',
         this.add.sprite(400, 300, 'kyorosprite').setInteractive(), 'adult'
@@ -105,17 +115,17 @@ function create ()
     yochan.sprite.anims.play('yawn');
 
     fpsUpgrade = new Upgrade(10, 
-        this.add.image(100, 475, 'fisherman').setInteractive(),
+        this.add.image(100, 475, 'fisherman').setInteractive({ useHandCursor: true }),
         '  '   
     );
 
     fpcUpgrade = new Upgrade(5,
-        this.add.image(250, 475, 'bait').setInteractive(),
+        this.add.image(250, 475, 'bait').setInteractive({ useHandCursor: true }),
         '  '
     );
 
     yochanUpgrade = new Upgrade(100,
-        this.add.image(400, 475, 'newseal').setInteractive(),
+        this.add.image(400, 475, 'newseal').setInteractive({ useHandCursor: true }),
         '  Seal: A new seal for you! \n Costs 100 fish.'
     )
 
@@ -215,12 +225,12 @@ function create ()
         let thisFish = fishPool[i];
         let thisFpc = fpcPool[i];
         i++;
-        thisFish.setPosition(300, 100);
-        thisFpc.setPosition(280, 100);
+        thisFish.setPosition(400, 175);
+        thisFpc.setPosition(380, 175);
         this.tweens.add({
             targets: thisFish,
-            x: 300 + (Math.random() * 30) * (Math.random() < 0.5 ? -1 : 1),
-            y: 80 - (Math.random() * 50),
+            x: 400 + (Math.random() * 30) * (Math.random() < 0.5 ? -1 : 1),
+            y: 130 - (Math.random() * 50),
             ease: 'Cubic',
             alpha: 0,
             duration: 700,
@@ -233,7 +243,7 @@ function create ()
         });
         this.tweens.add({
             targets: thisFpc,
-            y: 50,
+            y: 75,
             ease: 'Linear',
             alpha: 0,
             duration: 900,
