@@ -17,6 +17,10 @@ let upgradeTxtPool = [];
 let fpcPool = [];
 let scoreBoard;
 let fpsBoard;
+let achievementsButton;
+let sealbookButton;
+let achievementsScreen;
+let sealbookScreen;
 let timer = 0; // counts when a second has passed
 let timer2 = 0; // counts when 10 seconds have passed
 let toolTip;
@@ -31,8 +35,8 @@ let sc;
 
 var config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    width: 1500,
+    height: 690,
     physics: {
         default: 'arcade',
         arcade: {
@@ -57,6 +61,8 @@ function preload ()
     this.load.image('bait', 'assets/bait.PNG');
     this.load.image('fisherman', 'assets/fisherman.PNG');
     this.load.image('newseal', 'assets/newseal.PNG');
+    this.load.image('achievements', 'assets/achievements.PNG');
+    this.load.image('sealbook', 'assets/sealbook.PNG');
     this.load.spritesheet('kyorosprite', 'assets/kyorosprite.png', {frameWidth: 98, frameHeight: 98});
     this.load.spritesheet('babysprite', 'assets/babysprite.png', {frameWidth: 98, frameHeight: 98});
     this.load.spritesheet('iceholesprite', 'assets/iceholesprite.png', {frameWidth: 98, frameHeight: 98});
@@ -67,7 +73,9 @@ function preload ()
 
 function create ()
 {
-    this.add.image(400, 300, 'sky');
+    let sky = this.add.image(400, 300, 'sky');
+    sky.scaleX = 3;
+    sky.scaleY = 1.3;
     this.add.rectangle(50, 390, 700, 160, 0xffffff).setOrigin(0);
     scoreBoard = this.add.text(20, 30, 'Fish: ' + score, {
         fontFamily: 'serif', 
@@ -77,58 +85,10 @@ function create ()
         fontFamily: 'serif',
         fontSize: '18px'
     });
+    achievementsButton = this.add.image(900, 50, 'achievements').setInteractive({useHandCursor: true});
+    sealbookButton = this.add.image(900, 200, 'sealbook').setInteractive({useHandCursor: true});
 
-    this.anims.create({
-        key: 'blink',
-        frames: this.anims.generateFrameNumbers('kyorosprite', {start: 0, end: 10}),
-        frameRate: 10,
-        repeat: -1,
-        repeatDelay: 3500
-    });
-
-    this.anims.create({
-        key: 'yawn',
-        frames: this.anims.generateFrameNumbers('babysprite', {start: 0, end: 10}),
-        frameRate: 10,
-        repeat: -1,
-        repeatDelay: 5000,
-        yoyo: true
-    });
-
-    this.anims.create({
-        key: 'water',
-        frames: this.anims.generateFrameNumbers('iceholesprite', {start: 0, end: 11}),
-        frameRate: 10,
-        repeat: -1,
-        repeatDelay: 7500
-    })
-
-    this.anims.create({
-        key: 'look',
-        frames: this.anims.generateFrameNumbers('yochansprite', {start: 0, end: 9}),
-        frameRate: 10,
-        repeat: -1,
-        repeatDelay: 5000,
-        yoyo: true
-    })
-
-    this.anims.create({
-        key: 'banana',
-        frames: this.anims.generateFrameNumbers('babyneilsprite', {start: 0, end: 9}),
-        frameRate: 10,
-        repeat: -1,
-        repeatDelay: 10000,
-        yoyo: true
-    })
-
-    this.anims.create({
-        key: 'rest',
-        frames: this.anims.generateFrameNumbers('neilsprite', {start: 0, end: 11}),
-        frameRate: 10,
-        repeat: -1,
-        repeatDelay: 12000,
-        yoyo: true
-    })
+    setupAnims(sc);
 
     icehole = this.add.sprite(400, 175, 'iceholesprite').setInteractive({ useHandCursor: true });
     icehole.anims.play('water');
@@ -139,14 +99,15 @@ function create ()
     kyoro.sprite.anims.play('blink');
 
     yochan = new Seal("Yochan", "Ringed Seal", "Female", 500, ' ',
-        this.add.sprite(1000, 300, 'babysprite').setInteractive({ useHandCursor: true }), 'baby'
+        this.add.sprite(200, 300, 'babysprite').setInteractive({ useHandCursor: true }), 'baby'
     );
+    yochan.sprite.setVisible(false);
     yochan.sprite.anims.play('yawn');
 
     neil = new Seal('Neil', "Elephant Seal", "Male", 1000, ' ', 
         this.add.sprite(550, 300, 'babyneilsprite').setInteractive({useHandCursor: true}), 'baby'
     );
-    neil.sprite.visible = false;
+    neil.sprite.setVisible(false);
     neil.sprite.anims.play('banana');
 
     fpsUpgrade = new Upgrade(10, 
@@ -170,19 +131,19 @@ function create ()
     );
     neilUpgrade.sprite.visible = false;
 
-    toolTip =  this.add.rectangle(900, 700, 300, 100, 0xffffff).setOrigin(0);
-    toolTipText = this.add.text(900, 700, 'placeholder', { fontFamily: 'Arial', color: '#000' }).setOrigin(0);
+    toolTip =  this.add.rectangle(900, 700, 300, 100, 0xffffff).setOrigin(0).setVisible(false);
+    toolTipText = this.add.text(900, 700, 'placeholder', { fontFamily: 'Arial', color: '#000' }).setOrigin(0).setVisible(false);
     
     for (let d = 0; d < clickBuffer; d++) {
-        let upgradeText = this.add.text(900, 700, 'Upgraded!', { fontFamily: 'Arial', color: '#000' }).setOrigin(0);
+        let upgradeText = this.add.text(900, 700, 'Upgraded!', { fontFamily: 'Arial', color: '#000' }).setOrigin(0).setVisible(false);
         upgradeTxtPool.push(upgradeText);
     }
     
     for(let c = 0; c < clickBuffer + 10; c++){
-        let fpcText = this.add.text(900, 700, '+' + fpc, 
+        let fpcText = this.add.text(380, 175, '+' + fpc, 
             {fontFamily: 'Arial', color: '#000', fontSize: '24px', fontStyle: 'bold',
                 stroke: '#fff', strokeThickness: 10
-            }).setOrigin(0);
+            }).setOrigin(0).setVisible(false);
         fpcPool.push(fpcText);
     }
     
@@ -195,8 +156,8 @@ function create ()
         kyoro.hover = false;
         yochan.hover = false;
         neil.hover = false;
-        toolTip.setPosition(900, 700);
-        toolTipText.setPosition(900, 700);
+        toolTip.setVisible(false);
+        toolTipText.setVisible(false);
     });
     
     fpsUpgrade.sprite.on('pointermove', function (pointer, x, y, event) {
@@ -253,11 +214,11 @@ function create ()
         if(score >= yochanUpgrade.cost){
             score -= yochanUpgrade.cost;
             yochanUpgrade.level++;
-            yochan.sprite.setPosition(200, 300);
+            yochan.sprite.setVisible(true);
             yochanUpgrade.sprite.destroy();
-            toolTip.setPosition(900, 700);
-            toolTipText.setPosition(900, 700);
-            neilUpgrade.sprite.visible = true;
+            toolTip.setVisible(false);
+            toolTipText.setVisible(false);
+            neilUpgrade.sprite.setVisible(true);
         }
     });
 
@@ -267,8 +228,8 @@ function create ()
             neilUpgrade.level++;
             neil.sprite.visible = true;
             neilUpgrade.sprite.destroy();
-            toolTip.setPosition(900, 700);
-            toolTipText.setPosition(900, 700);
+            toolTip.setVisible(false);
+            toolTipText.setVisible(false);
         }
     })
 
@@ -350,7 +311,8 @@ function create ()
     })
 
     for (let d = 0; d < clickBuffer; d++) {
-        let fish = this.add.image(850, 650, 'fish');
+        let fish = this.add.image(400, 175, 'fish').setScale(0.5);
+        fish.setVisible(false);
         fishPool.push(fish);
     }
 
@@ -364,8 +326,8 @@ function create ()
         let thisFish = fishPool[i];
         let thisFpc = fpcPool[i];
         i++;
-        thisFish.setPosition(400, 175);
-        thisFpc.setPosition(380, 175);
+        thisFish.setVisible(true);
+        thisFpc.setVisible(true);
         this.tweens.add({
             targets: thisFish,
             x: 400 + (Math.random() * 30) * (Math.random() < 0.5 ? -1 : 1),
@@ -376,7 +338,8 @@ function create ()
             repeat: 0,
             yoyo: false,
             onComplete: function(){
-                thisFish.setPosition(850, 650);
+                thisFish.setPosition(400, 175);
+                thisFish.setVisible(false);
                 thisFish.alpha = 1;
             }
         });
@@ -389,13 +352,23 @@ function create ()
             repeat: 0,
             yoyo: false,
             onComplete: function(){
-                thisFpc.setPosition(850, 650);
+                thisFpc.setPosition(380, 175);
+                thisFpc.setVisible(false);
                 thisFpc.alpha = 1;
             }
         })
     });
 
+    achievementsScreen = this.add.container(300, 400);
+    sealbookScreen = this.add.container(300, 400);
 
+    achievementsScreen.setVisible(false);
+    sealbookScreen.setVisible(false);
+    achievementsScreen.add(this.add.rectangle(250, -50, 800, 500, 0xffffff));
+
+    achievementsButton.on('pointerdown', () =>{
+        achievementsScreen.setVisible(true);
+    })
 
 }
 
@@ -464,6 +437,7 @@ function printUpgradedText(upgrade){
         i = 0;
     }
     let thisText = upgradeTxtPool[i];
+    thisText.setVisible(true);
     i++;
     thisText.setPosition(upgrade.sprite.x, upgrade.sprite.y);
     sc.tweens.add({
@@ -475,8 +449,62 @@ function printUpgradedText(upgrade){
         repeat: 0,
         yoyo: false,
         onComplete: function(){
-            thisText.setPosition(900, 700);
+            thisText.setVisible(false);
             thisText.alpha = 1;
         }
     });
+}
+
+function setupAnims(sc){
+    sc.anims.create({
+        key: 'blink',
+        frames: sc.anims.generateFrameNumbers('kyorosprite', {start: 0, end: 10}),
+        frameRate: 10,
+        repeat: -1,
+        repeatDelay: 3500
+    });
+
+    sc.anims.create({
+        key: 'yawn',
+        frames: sc.anims.generateFrameNumbers('babysprite', {start: 0, end: 10}),
+        frameRate: 10,
+        repeat: -1,
+        repeatDelay: 5000,
+        yoyo: true
+    });
+
+    sc.anims.create({
+        key: 'water',
+        frames: sc.anims.generateFrameNumbers('iceholesprite', {start: 0, end: 11}),
+        frameRate: 10,
+        repeat: -1,
+        repeatDelay: 7500
+    })
+
+    sc.anims.create({
+        key: 'look',
+        frames: sc.anims.generateFrameNumbers('yochansprite', {start: 0, end: 9}),
+        frameRate: 10,
+        repeat: -1,
+        repeatDelay: 5000,
+        yoyo: true
+    })
+
+    sc.anims.create({
+        key: 'banana',
+        frames: sc.anims.generateFrameNumbers('babyneilsprite', {start: 0, end: 9}),
+        frameRate: 10,
+        repeat: -1,
+        repeatDelay: 10000,
+        yoyo: true
+    })
+
+    sc.anims.create({
+        key: 'rest',
+        frames: sc.anims.generateFrameNumbers('neilsprite', {start: 0, end: 11}),
+        frameRate: 10,
+        repeat: -1,
+        repeatDelay: 12000,
+        yoyo: true
+    })
 }

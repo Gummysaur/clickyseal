@@ -22,6 +22,8 @@ export default class Seal{
 
     onHover(toolTip, toolTipText, pointer){
         toolTipText.setText(this.text);
+        toolTipText.setVisible(true);
+        toolTip.setVisible(true);
         this.hover = true;
         toolTip.x = pointer.x;
         toolTip.y = pointer.y;
