@@ -1,5 +1,6 @@
 import Upgrade from "./Upgrade.js";
 import Seal from "./Seal.js";
+import Achievement from "./Achievement.js"
 
 let kyoro;
 let yochan;
@@ -30,6 +31,9 @@ let fpsUpgrade;
 let fpcUpgrade;
 let yochanUpgrade;
 let neilUpgrade;
+
+let speciesAchv;
+let speciesFound = 1;
 
 let sc;
 
@@ -63,6 +67,8 @@ function preload ()
     this.load.image('newseal', 'assets/newseal.PNG');
     this.load.image('achievements', 'assets/achievements.PNG');
     this.load.image('sealbook', 'assets/sealbook.PNG');
+    this.load.image('locked', 'assets/locked.PNG');
+    this.load.image('speciesachv', 'assets/speciesachv.PNG');
     this.load.spritesheet('kyorosprite', 'assets/kyorosprite.png', {frameWidth: 98, frameHeight: 98});
     this.load.spritesheet('babysprite', 'assets/babysprite.png', {frameWidth: 98, frameHeight: 98});
     this.load.spritesheet('iceholesprite', 'assets/iceholesprite.png', {frameWidth: 98, frameHeight: 98});
@@ -214,6 +220,7 @@ function create ()
         if(score >= yochanUpgrade.cost){
             score -= yochanUpgrade.cost;
             yochanUpgrade.level++;
+            speciesFound++;
             yochan.sprite.setVisible(true);
             yochanUpgrade.sprite.destroy();
             toolTip.setVisible(false);
@@ -359,16 +366,37 @@ function create ()
         })
     });
 
-    achievementsScreen = this.add.container(300, 400);
-    sealbookScreen = this.add.container(300, 400);
+    achievementsScreen = this.add.container(750, 345);
+    sealbookScreen = this.add.container();
 
     achievementsScreen.setVisible(false);
     sealbookScreen.setVisible(false);
-    achievementsScreen.add(this.add.rectangle(250, -50, 800, 500, 0xffffff));
+    achievementsScreen.add(this.add.rectangle(0, 0, 2000, 800, 0x000000).setAlpha(0.5).setInteractive());
+    achievementsScreen.add(this.add.rectangle(0, 0, 800, 500, 0xffffff));
+    let backButton = this.add.text(-350, -200, 'Back', {
+        fontFamily: 'serif', 
+        fontSize: '24px',
+        color: '#000'
+    }).setInteractive({useHandCursor:true});
+    achievementsScreen.add(backButton);
+
+    speciesAchv = new Achievement(this.add.image(-280, -110, 'locked').setInteractive(), 'Locked');
+    achievementsScreen.add(speciesAchv.sprite);
+
+    toolTip.depth = 20;
+    toolTipText.depth = 20;
+
+    backButton.on('pointerdown', ()=>{
+        achievementsScreen.setVisible(false);
+    })
 
     achievementsButton.on('pointerdown', () =>{
         achievementsScreen.setVisible(true);
-    })
+    });
+
+    speciesAchv.sprite.on('pointermove', function(pointer){
+        speciesAchv.onHover(toolTip, toolTipText, pointer);
+    });
 
 }
 
@@ -423,6 +451,11 @@ function update (time, delta)
         else if(neil.stage === 'adult'){
             toolTipText.appendText('All grown up!');
         }
+    }
+
+    if(speciesFound >= 2 && speciesAchv.achieved == false){
+        speciesAchv.sprite.setTexture('speciesachv');
+        speciesAchv.text = 'Discover 2 seal species.';
     }
 
     scoreBoard.setText('Fish: ' + score);
