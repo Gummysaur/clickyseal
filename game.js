@@ -23,17 +23,31 @@ let sealbookButton;
 let achievementsScreen;
 let sealbookScreen;
 let timer = 0; // counts when a second has passed
-let timer2 = 0; // counts when 10 seconds have passed
 let toolTip;
 let toolTipText;
 
+// upgrade objects
 let fpsUpgrade;
 let fpcUpgrade;
 let yochanUpgrade;
 let neilUpgrade;
 
+// achivement variables
 let speciesAchv;
 let speciesFound = 1;
+
+// sealbook variables
+let kyoroDex;
+let babyYoDex;
+let yochanDex;
+let babyNeilDex;
+let neilDex;
+
+// game object arrays
+let allSeals = [];
+let allUpgrades = [];
+let allAchievements = [];
+let allDexEntries =[];
 
 let sc;
 
@@ -99,22 +113,26 @@ function create ()
     icehole = this.add.sprite(400, 175, 'iceholesprite').setInteractive({ useHandCursor: true });
     icehole.anims.play('water');
 
-    kyoro = new Seal("Kyoro", "Spotted Seal", 'Female', -1, ' ',
+    kyoro = new Seal("Kyoro", "Spotted Seal", 'Female', -1, 'A shy and curious seal.',
         this.add.sprite(400, 300, 'kyorosprite').setInteractive({ useHandCursor: true }), 'adult'
     );
     kyoro.sprite.anims.play('blink');
 
-    yochan = new Seal("Yochan", "Ringed Seal", "Female", 500, ' ',
+    yochan = new Seal("Yochan", "Ringed Seal", "Female", 500, 'A spoiled diva.',
         this.add.sprite(200, 300, 'babysprite').setInteractive({ useHandCursor: true }), 'baby'
     );
     yochan.sprite.setVisible(false);
     yochan.sprite.anims.play('yawn');
 
-    neil = new Seal('Neil', "Elephant Seal", "Male", 1000, ' ', 
+    neil = new Seal('Neil', "Elephant Seal", "Male", 1000, 'Stubborn and short-tempered.', 
         this.add.sprite(550, 300, 'babyneilsprite').setInteractive({useHandCursor: true}), 'baby'
     );
     neil.sprite.setVisible(false);
     neil.sprite.anims.play('banana');
+
+    allSeals.push(kyoro);
+    allSeals.push(yochan);
+    allSeals.push(neil);
 
     fpsUpgrade = new Upgrade(10, 
         this.add.image(100, 475, 'fisherman').setInteractive({ useHandCursor: true }),
@@ -136,6 +154,11 @@ function create ()
         '  Seal: Another new seal for you! \n Costs 700 fish.'
     );
     neilUpgrade.sprite.visible = false;
+
+    allUpgrades.push(fpsUpgrade);
+    allUpgrades.push(fpcUpgrade);
+    allUpgrades.push(yochanUpgrade);
+    allUpgrades.push(neilUpgrade);
 
     toolTip =  this.add.rectangle(900, 700, 300, 100, 0xffffff).setOrigin(0).setVisible(false);
     toolTipText = this.add.text(900, 700, 'placeholder', { fontFamily: 'Arial', color: '#000' }).setOrigin(0).setVisible(false);
@@ -165,33 +188,17 @@ function create ()
         toolTip.setVisible(false);
         toolTipText.setVisible(false);
     });
-    
-    fpsUpgrade.sprite.on('pointermove', function (pointer, x, y, event) {
-        fpsUpgrade.onHover(toolTip, toolTipText, pointer);
+
+    allUpgrades.forEach(function(u){
+        u.sprite.on('pointermove', function(pointer){
+            u.onHover(toolTip, toolTipText, pointer);
+        });
     });
 
-    fpcUpgrade.sprite.on('pointermove', function (pointer, x, y, event) {
-        fpcUpgrade.onHover(toolTip, toolTipText, pointer);
-    });
-
-    yochanUpgrade.sprite.on('pointermove', function (pointer, x, y, event) {
-        yochanUpgrade.onHover(toolTip, toolTipText, pointer);
-    });
-
-    neilUpgrade.sprite.on('pointermove', function (pointer){
-        neilUpgrade.onHover(toolTip, toolTipText, pointer);
-    });
-
-    kyoro.sprite.on('pointermove', function (pointer, x, y, event){
-        kyoro.onHover(toolTip, toolTipText, pointer);
-    });
-
-    yochan.sprite.on('pointermove', function(pointer, x, y, event){
-        yochan.onHover(toolTip, toolTipText, pointer);
-    });
-
-    neil.sprite.on('pointermove', function(pointer){
-        neil.onHover(toolTip, toolTipText, pointer);
+    allSeals.forEach(function(s){
+        s.sprite.on('pointermove', function(pointer){
+            s.onHover(toolTip, toolTipText, pointer);
+        });
     });
 
     fpsUpgrade.sprite.on('pointerdown', () => {
@@ -367,10 +374,12 @@ function create ()
     });
 
     achievementsScreen = this.add.container(750, 345);
-    sealbookScreen = this.add.container();
+    sealbookScreen = this.add.container(750, 345);
 
     achievementsScreen.setVisible(false);
     sealbookScreen.setVisible(false);
+    sealbookScreen.add(this.add.rectangle(0, 0, 2000, 800, 0x000000).setAlpha(0.5).setInteractive());
+    sealbookScreen.add(this.add.rectangle(0, 0, 800, 500, 0xffffff));
     achievementsScreen.add(this.add.rectangle(0, 0, 2000, 800, 0x000000).setAlpha(0.5).setInteractive());
     achievementsScreen.add(this.add.rectangle(0, 0, 800, 500, 0xffffff));
     let backButton = this.add.text(-350, -200, 'Back', {
@@ -378,10 +387,34 @@ function create ()
         fontSize: '24px',
         color: '#000'
     }).setInteractive({useHandCursor:true});
+    let backButton2 = this.add.text(-350, -200, 'Back', {
+        fontFamily: 'serif', 
+        fontSize: '24px',
+        color: '#000'
+    }).setInteractive({useHandCursor:true});
     achievementsScreen.add(backButton);
+    sealbookScreen.add(backButton2);
 
     speciesAchv = new Achievement(this.add.image(-280, -110, 'locked').setInteractive(), 'Locked');
+    allAchievements.push(speciesAchv);
+
+    kyoroDex = new Achievement(this.add.image(-280, -110, 'kyorosprite').setInteractive(), kyoro.text);
+    babyYoDex = new Achievement(this.add.image(-180, -110, 'locked').setInteractive(), 'Locked');
+    yochanDex = new Achievement(this.add.image(-80, -110, 'locked').setInteractive(), 'Locked');
+    babyNeilDex = new Achievement(this.add.image(20, -110, 'locked').setInteractive(), 'Locked');
+    neilDex = new Achievement(this.add.image(120, -110, 'locked').setInteractive(), 'Locked');
+    allDexEntries.push(kyoroDex);
+    allDexEntries.push(babyYoDex);
+    allDexEntries.push(yochanDex);
+    allDexEntries.push(babyNeilDex);
+    allDexEntries.push(neilDex);
+    
     achievementsScreen.add(speciesAchv.sprite);
+    sealbookScreen.add(kyoroDex.sprite);
+    sealbookScreen.add(babyYoDex.sprite);
+    sealbookScreen.add(yochanDex.sprite);
+    sealbookScreen.add(babyNeilDex.sprite);
+    sealbookScreen.add(neilDex.sprite);
 
     toolTip.depth = 20;
     toolTipText.depth = 20;
@@ -390,20 +423,33 @@ function create ()
         achievementsScreen.setVisible(false);
     })
 
+    backButton2.on('pointerdown', ()=>{
+        sealbookScreen.setVisible(false);
+    })
+
     achievementsButton.on('pointerdown', () =>{
         achievementsScreen.setVisible(true);
     });
 
+    sealbookButton.on('pointerdown', () => {
+        sealbookScreen.setVisible(true);
+    })
+
     speciesAchv.sprite.on('pointermove', function(pointer){
         speciesAchv.onHover(toolTip, toolTipText, pointer);
     });
+
+    allDexEntries.forEach(function(d){
+        d.sprite.on('pointermove', function(pointer){
+            d.onHover(toolTip, toolTipText, pointer);
+        })
+    })
 
 }
 
 function update (time, delta)
 {
     timer += delta;
-    timer2 += delta;
     while (timer > 1000) {
         score += fps;
         scoreAllTime += fps;
@@ -420,40 +466,26 @@ function update (time, delta)
             + fpcUpgrade.cost + ' fish. \n Quantity: ' + fpcUpgrade.level
         );
     }
-    if(kyoro.hover){
-        toolTipText.setText('Name: ' + kyoro.name + 
-            '\nSpecies: ' + kyoro.species +
-            '\nGender: ' + kyoro.gender +
-        '\n  A shy and curious seal.');
-    }
-    if(yochan.hover){
-        toolTipText.setText('Name: ' + yochan.name +
-            '\nSpecies: ' + yochan.species +
-            '\nGender: ' + yochan.gender +
-            '\n  A spoiled diva.'
-        );
-        if(yochan.stage === 'baby'){
-            toolTipText.appendText('Needs ' + yochan.lvlUpCost + ' fish to grow up.');
+
+    allSeals.forEach(function(s){
+        if(s.hover){
+            toolTipText.setText('Name: ' + s.name + 
+                '\nSpecies: ' + s.species +
+                '\nGender: ' + s.gender +
+                '\n' + s.text
+            );
+
+            if(s.stage === 'baby'){
+                toolTipText.appendText('Needs ' + s.lvlUpCost + ' fish to grow up.');
+            }
+            else if(s.stage === 'adult'){
+                toolTipText.appendText('All grown up!');
+            }
         }
-        else if(yochan.stage === 'adult'){
-            toolTipText.appendText('All grown up!');
-        }
-    }
-    if(neil.hover){
-        toolTipText.setText('Name: ' + neil.name +
-            '\nSpecies: ' + neil.species +
-            '\nGender: ' + neil.gender +
-            '\n Stubborn and short-tempered.'
-        );
-        if(neil.stage === 'baby'){
-            toolTipText.appendText('Needs ' + neil.lvlUpCost + ' fish to grow up.');
-        }
-        else if(neil.stage === 'adult'){
-            toolTipText.appendText('All grown up!');
-        }
-    }
+    });
 
     if(speciesFound >= 2 && speciesAchv.achieved == false){
+        speciesAchv.achieved = true;
         speciesAchv.sprite.setTexture('speciesachv');
         speciesAchv.text = 'Discover 2 seal species.';
     }
