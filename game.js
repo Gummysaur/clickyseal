@@ -1,16 +1,19 @@
 import Upgrade from "./Upgrade.js";
 import Seal from "./Seal.js";
 import Achievement from "./Achievement.js"
+import DexEntry from "./DexEntry.js"
 
 let kyoro;
 let yochan;
 let neil;
 
 let icehole;
-let score = 2000;
+let score = 3000;
 let scoreAllTime = 0;
 let fpc = 1; // fish per click
 let fps = 0; // idle fish gained per second
+let fpsMult = 1;
+let fpcMult = 1;
 let i = 0; // index of fish pool
 let clickBuffer = 10; // # of fish/upgrade popup text in the pool
 let fishPool = [];
@@ -31,6 +34,9 @@ let fpsUpgrade;
 let fpcUpgrade;
 let yochanUpgrade;
 let neilUpgrade;
+let fishUpgrade;
+let octopusUpgrade;
+let baitUpgrade;
 
 // achivement variables
 let speciesAchv;
@@ -76,7 +82,10 @@ function preload ()
     sc = this;
     this.load.image('sky', 'assets/sky.png');
     this.load.image('fish', 'assets/fish.png');
+    this.load.image('fish2', 'assets/fish2.PNG')
+    this.load.image('octopus', 'assets/octopus.PNG');
     this.load.image('bait', 'assets/bait.PNG');
+    this.load.image('bait2', 'assets/bait2.PNG');
     this.load.image('fisherman', 'assets/fisherman.PNG');
     this.load.image('newseal', 'assets/newseal.PNG');
     this.load.image('achievements', 'assets/achievements.PNG');
@@ -146,19 +155,40 @@ function create ()
 
     yochanUpgrade = new Upgrade(100,
         this.add.image(400, 475, 'newseal').setInteractive({ useHandCursor: true }),
-        '  Seal: A new seal for you! \n Costs 100 fish.'
+        '  Seal:\n A new seal for you! \n Costs 100 fish.'
     );
 
     neilUpgrade = new Upgrade(700,
         this.add.image(400, 475, 'newseal').setInteractive({useHandCursor: true}),
-        '  Seal: Another new seal for you! \n Costs 700 fish.'
+        '  Seal:\n Another new seal for you! \n Costs 700 fish.'
     );
-    neilUpgrade.sprite.visible = false;
+    neilUpgrade.sprite.setVisible(false);
+
+    fishUpgrade = new Upgrade(500,
+        this.add.image(550, 475, 'fish2').setInteractive({useHandCursor: true}),
+        '  Salmon:\n Increases fish per second by 25%. \n Costs 500 fish.'
+    );
+    fishUpgrade.sprite.setVisible(false);
+
+    octopusUpgrade = new Upgrade(800,
+        this.add.image(550, 475, 'octopus').setInteractive({useHandCursor: true}),
+        '  Octopus:\n Increases FpS by another 25%. \n Costs 800 fish.'
+    );
+    octopusUpgrade.sprite.setVisible(false);
+
+    baitUpgrade = new Upgrade(700,
+        this.add.image(700, 475, 'bait2').setInteractive({useHandCursor: true}),
+        '  Golden Bait:\n Increases fish per click by 50%. \n Costs 700 fish.'
+    )
+    baitUpgrade.sprite.setVisible(false);
 
     allUpgrades.push(fpsUpgrade);
     allUpgrades.push(fpcUpgrade);
     allUpgrades.push(yochanUpgrade);
     allUpgrades.push(neilUpgrade);
+    allUpgrades.push(fishUpgrade);
+    allUpgrades.push(octopusUpgrade);
+    allUpgrades.push(baitUpgrade);
 
     toolTip =  this.add.rectangle(900, 700, 300, 100, 0xffffff).setOrigin(0).setVisible(false);
     toolTipText = this.add.text(900, 700, 'placeholder', { fontFamily: 'Arial', color: '#000' }).setOrigin(0).setVisible(false);
@@ -169,7 +199,7 @@ function create ()
     }
     
     for(let c = 0; c < clickBuffer + 10; c++){
-        let fpcText = this.add.text(380, 175, '+' + fpc, 
+        let fpcText = this.add.text(380, 175, '+' + (Math.floor(fpc * fpcMult)), 
             {fontFamily: 'Arial', color: '#000', fontSize: '24px', fontStyle: 'bold',
                 stroke: '#fff', strokeThickness: 10
             }).setOrigin(0).setVisible(false);
@@ -228,17 +258,22 @@ function create ()
             score -= yochanUpgrade.cost;
             yochanUpgrade.level++;
             speciesFound++;
+            babyYoDex.achieved = true;
             yochan.sprite.setVisible(true);
             yochanUpgrade.sprite.destroy();
             toolTip.setVisible(false);
             toolTipText.setVisible(false);
             neilUpgrade.sprite.setVisible(true);
+            fishUpgrade.sprite.setVisible(true);
+            baitUpgrade.sprite.setVisible(true);
         }
     });
 
     neilUpgrade.sprite.on('pointerdown', () => {
         if(score >= neilUpgrade.cost){
             score -= neilUpgrade.cost;
+            speciesFound++;
+            babyNeilDex.achieved = true;
             neilUpgrade.level++;
             neil.sprite.visible = true;
             neilUpgrade.sprite.destroy();
@@ -246,6 +281,43 @@ function create ()
             toolTipText.setVisible(false);
         }
     })
+
+    fishUpgrade.sprite.on('pointerdown', () => {
+        if(score >= fishUpgrade.cost){
+            score -= fishUpgrade.cost;
+            fishUpgrade.level++;
+            fpsMult += 0.25;
+            fishPool[2].setTexture('fish2');
+            fishPool[5].setTexture('fish2');
+            fishUpgrade.sprite.destroy();
+            octopusUpgrade.sprite.setVisible(true);
+            toolTip.setVisible(false);
+            toolTipText.setVisible(false);
+        }
+    });
+
+    octopusUpgrade.sprite.on('pointerdown', () =>{
+        if(score >= octopusUpgrade.cost){
+            score -= octopusUpgrade.cost;
+            octopusUpgrade.level++;
+            fpsMult += 0.25;
+            fishPool[7].setTexture('octopus');
+            octopusUpgrade.sprite.destroy();
+            toolTip.setVisible(false);
+            toolTipText.setVisible(false);
+        }
+    });
+
+    baitUpgrade.sprite.on('pointerdown', () => {
+        if(score >= baitUpgrade.cost){
+            score -= baitUpgrade.cost;
+            baitUpgrade.level++;
+            fpcMult += 0.5;
+            baitUpgrade.sprite.destroy();
+            toolTip.setVisible(false);
+            toolTipText.setVisible(false);
+        }
+    });
 
     kyoro.sprite.on('pointerdown', () => {
         this.tweens.add({
@@ -273,6 +345,7 @@ function create ()
             score -= yochan.lvlUpCost;
             yochan.lvl++;
             yochan.stage = 'adult';
+            yochanDex.achieved = true;
             yochan.sprite.setTexture('yochansprite');
             yochan.sprite.anims.play('look');
         }
@@ -301,6 +374,7 @@ function create ()
             score -= neil.lvlUpCost;
             neil.lvl++;
             neil.stage = 'adult';
+            neilDex.achieved = true;
             neil.sprite.setTexture('neilsprite');
             neil.sprite.anims.play('rest');
         }
@@ -332,8 +406,8 @@ function create ()
 
     // give fish when you click the ice hole
     icehole.on('pointerdown', () => {
-        score+=fpc;
-        scoreAllTime+=fpc;
+        score+=(fpc * fpcMult);
+        scoreAllTime+=(fpc * fpcMult);
         if(i == clickBuffer){
             i = 0;
         }
@@ -347,14 +421,12 @@ function create ()
             x: 400 + (Math.random() * 30) * (Math.random() < 0.5 ? -1 : 1),
             y: 130 - (Math.random() * 50),
             ease: 'Cubic',
-            alpha: 0,
-            duration: 700,
+            duration: 400,
             repeat: 0,
-            yoyo: false,
+            yoyo: true,
             onComplete: function(){
                 thisFish.setPosition(400, 175);
                 thisFish.setVisible(false);
-                thisFish.alpha = 1;
             }
         });
         this.tweens.add({
@@ -395,14 +467,15 @@ function create ()
     achievementsScreen.add(backButton);
     sealbookScreen.add(backButton2);
 
-    speciesAchv = new Achievement(this.add.image(-280, -110, 'locked').setInteractive(), 'Locked');
+    speciesAchv = new Achievement(this.add.image(-280, -110, 'locked').setInteractive(), 'Locked', 'speciesachv');
     allAchievements.push(speciesAchv);
 
-    kyoroDex = new Achievement(this.add.image(-280, -110, 'kyorosprite').setInteractive(), kyoro.text);
-    babyYoDex = new Achievement(this.add.image(-180, -110, 'locked').setInteractive(), 'Locked');
-    yochanDex = new Achievement(this.add.image(-80, -110, 'locked').setInteractive(), 'Locked');
-    babyNeilDex = new Achievement(this.add.image(20, -110, 'locked').setInteractive(), 'Locked');
-    neilDex = new Achievement(this.add.image(120, -110, 'locked').setInteractive(), 'Locked');
+    kyoroDex = new DexEntry(kyoro, this.add.image(-280, -110, 'kyorosprite').setInteractive(), 'Locked', 'kyorosprite');
+    kyoroDex.achieved = true;
+    babyYoDex = new DexEntry(yochan, this.add.image(-180, -110, 'locked').setInteractive(), 'Locked', 'babysprite');
+    yochanDex = new DexEntry(yochan, this.add.image(-80, -110, 'locked').setInteractive(), 'Locked', 'yochansprite');
+    babyNeilDex = new DexEntry(neil, this.add.image(20, -110, 'locked').setInteractive(), 'Locked', 'babyneilsprite');
+    neilDex = new DexEntry(neil, this.add.image(120, -110, 'locked').setInteractive(), 'Locked', 'neilsprite');
     allDexEntries.push(kyoroDex);
     allDexEntries.push(babyYoDex);
     allDexEntries.push(yochanDex);
@@ -451,8 +524,8 @@ function update (time, delta)
 {
     timer += delta;
     while (timer > 1000) {
-        score += fps;
-        scoreAllTime += fps;
+        score += (fps * fpsMult);
+        scoreAllTime += (fps * fpsMult);
         timer -= 1000;
     }
 
@@ -484,16 +557,22 @@ function update (time, delta)
         }
     });
 
-    if(speciesFound >= 2 && speciesAchv.achieved == false){
+    if(speciesFound >= 2 && !speciesAchv.achieved){
         speciesAchv.achieved = true;
-        speciesAchv.sprite.setTexture('speciesachv');
+        speciesAchv.sprite.setTexture(speciesAchv.achSprite);
         speciesAchv.text = 'Discover 2 seal species.';
     }
 
-    scoreBoard.setText('Fish: ' + score);
-    fpsBoard.setText('  per second: ' + fps);
+    allDexEntries.forEach(function(d){
+        if(d.achieved && !d.handled){
+            d.handleAchieved();
+        }
+    })
+
+    scoreBoard.setText('Fish: ' + Math.floor(score));
+    fpsBoard.setText('  per second: ' + Math.floor((fps * fpsMult)));
     for(let c = 0; c < clickBuffer; c++){
-        fpcPool[c].setText('+' + fpc);
+        fpcPool[c].setText('+' + Math.floor(fpc * fpcMult));
     }
 }
 
