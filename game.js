@@ -3,12 +3,7 @@ import Seal from "./Seal.js";
 import Achievement from "./Achievement.js"
 import DexEntry from "./DexEntry.js"
 
-let kyoro;
-let yochan;
-let neil;
-
-let icehole;
-let score = 3000;
+let score = 7000;
 let scoreAllTime = 0;
 let fpc = 1; // fish per click
 let fps = 0; // idle fish gained per second
@@ -16,15 +11,12 @@ let fpsMult = 1;
 let fpcMult = 1;
 let i = 0; // index of fish pool
 let clickBuffer = 10; // # of fish/upgrade popup text in the pool
-let fishPool = [];
-let upgradeTxtPool = [];
+
+// used for the little animated pop-ups upon clicking something
 let fpcPool = [];
+
 let scoreBoard;
 let fpsBoard;
-let achievementsButton;
-let sealbookButton;
-let achievementsScreen;
-let sealbookScreen;
 let timer = 0; // counts when a second has passed
 let toolTip;
 let toolTipText;
@@ -37,17 +29,22 @@ let neilUpgrade;
 let fishUpgrade;
 let octopusUpgrade;
 let baitUpgrade;
+let nikoUpgrade;
 
 // achivement variables
 let speciesAchv;
 let speciesFound = 1;
+let thousandFishAchv;
+let juggleAchv;
 
-// sealbook variables
+// sealbook objects (dex like pokedex because sealBookEntry is too long)
 let kyoroDex;
 let babyYoDex;
 let yochanDex;
 let babyNeilDex;
 let neilDex;
+let babyNikoDex;
+let nikoDex;
 
 // game object arrays
 let allSeals = [];
@@ -55,6 +52,7 @@ let allUpgrades = [];
 let allAchievements = [];
 let allDexEntries =[];
 
+// the scene
 let sc;
 
 var config = {
@@ -92,17 +90,24 @@ function preload ()
     this.load.image('sealbook', 'assets/sealbook.PNG');
     this.load.image('locked', 'assets/locked.PNG');
     this.load.image('speciesachv', 'assets/speciesachv.PNG');
+    this.load.image('juggleachv', 'assets/juggleachv.PNG');
     this.load.spritesheet('kyorosprite', 'assets/kyorosprite.png', {frameWidth: 98, frameHeight: 98});
     this.load.spritesheet('babysprite', 'assets/babysprite.png', {frameWidth: 98, frameHeight: 98});
     this.load.spritesheet('iceholesprite', 'assets/iceholesprite.png', {frameWidth: 98, frameHeight: 98});
     this.load.spritesheet('yochansprite', 'assets/yochansprite.png', {frameWidth: 98, frameHeight: 98});
     this.load.spritesheet('babyneilsprite', 'assets/babyneilsprite.png', {frameWidth: 98, frameHeight: 98});
     this.load.spritesheet('neilsprite', 'assets/neilsprite.png', {frameWidth: 98, frameHeight: 98});
+    this.load.spritesheet('babynikosprite', 'assets/babynikosprite.png', {frameWidth: 98, frameHeight: 98});
+    this.load.spritesheet('nikosprite', 'assets/nikosprite.png', {frameWidth: 98, frameHeight: 98});
 }
 
 function create ()
 {
     let sky = this.add.image(400, 300, 'sky');
+
+    let fishPool = [];
+    let upgradeTxtPool = [];
+
     sky.scaleX = 3;
     sky.scaleY = 1.3;
     this.add.rectangle(50, 390, 700, 160, 0xffffff).setOrigin(0);
@@ -114,71 +119,88 @@ function create ()
         fontFamily: 'serif',
         fontSize: '18px'
     });
-    achievementsButton = this.add.image(900, 50, 'achievements').setInteractive({useHandCursor: true});
-    sealbookButton = this.add.image(900, 200, 'sealbook').setInteractive({useHandCursor: true});
+    let achievementsButton = this.add.image(900, 50, 'achievements').setInteractive({useHandCursor: true});
+    let sealbookButton = this.add.image(900, 200, 'sealbook').setInteractive({useHandCursor: true});
 
     setupAnims(sc);
 
-    icehole = this.add.sprite(400, 175, 'iceholesprite').setInteractive({ useHandCursor: true });
+    let icehole = this.add.sprite(400, 175, 'iceholesprite').setInteractive({ useHandCursor: true });
     icehole.anims.play('water');
 
-    kyoro = new Seal("Kyoro", "Spotted Seal", 'Female', -1, 'A shy and curious seal.',
-        this.add.sprite(400, 300, 'kyorosprite').setInteractive({ useHandCursor: true }), 'adult'
+    let kyoro = new Seal("Kyoro", "Spotted Seal", 'Female', -1, 'A shy and curious seal.',
+        this.add.sprite(400, 300, 'kyorosprite').setInteractive({ useHandCursor: true }), 'adult', 0,
+        'none', 'blink'
     );
     kyoro.sprite.anims.play('blink');
 
-    yochan = new Seal("Yochan", "Ringed Seal", "Female", 500, 'A spoiled diva.',
-        this.add.sprite(200, 300, 'babysprite').setInteractive({ useHandCursor: true }), 'baby'
+    let yochan = new Seal("Yochan", "Ringed Seal", "Female", 500, 'A spoiled diva.',
+        this.add.sprite(200, 300, 'babysprite').setInteractive({ useHandCursor: true }), 'baby', 5,
+        'yawn', 'look'
     );
     yochan.sprite.setVisible(false);
     yochan.sprite.anims.play('yawn');
 
-    neil = new Seal('Neil', "Elephant Seal", "Male", 1000, 'Stubborn and short-tempered.', 
-        this.add.sprite(550, 300, 'babyneilsprite').setInteractive({useHandCursor: true}), 'baby'
+    let neil = new Seal('Neil', "Elephant Seal", "Male", 1000, 'Stubborn and short-tempered.', 
+        this.add.sprite(550, 300, 'babyneilsprite').setInteractive({useHandCursor: true}), 'baby', 10,
+        'banana', 'rest'
     );
     neil.sprite.setVisible(false);
     neil.sprite.anims.play('banana');
 
+    let niko = new Seal('Niko', 'Baikal Seal', 'Male', 1500, 'A silly, quirky seal.', 
+        this.add.sprite(180, 200, 'babynikosprite').setInteractive({useHandCursor: true}), 'baby', 15,
+        'rollover', 'frogblink'
+    )
+    niko.sprite.setVisible(false);
+    niko.sprite.anims.play('rollover');
+
     allSeals.push(kyoro);
     allSeals.push(yochan);
     allSeals.push(neil);
+    allSeals.push(niko);
 
     fpsUpgrade = new Upgrade(10, 
         this.add.image(100, 475, 'fisherman').setInteractive({ useHandCursor: true }),
-        '  '   
+        '  Fisherman:\nProduces 1 fish per second. '   
     );
 
     fpcUpgrade = new Upgrade(5,
         this.add.image(250, 475, 'bait').setInteractive({ useHandCursor: true }),
-        '  '
+        '   Bait:\nGives +1 fish per click. '
     );
 
     yochanUpgrade = new Upgrade(100,
         this.add.image(400, 475, 'newseal').setInteractive({ useHandCursor: true }),
-        '  Seal:\n A new seal for you! \n Costs 100 fish.'
+        '  Seal:\n A new seal for you! '
     );
 
     neilUpgrade = new Upgrade(700,
         this.add.image(400, 475, 'newseal').setInteractive({useHandCursor: true}),
-        '  Seal:\n Another new seal for you! \n Costs 700 fish.'
+        '  Seal:\n Another new seal for you! '
     );
     neilUpgrade.sprite.setVisible(false);
 
+    nikoUpgrade = new Upgrade(1000,
+        this.add.image(400, 475, 'newseal').setInteractive({useHandCursor: true}),
+        '  Seal: \n Yet another new seal for you! '
+    );
+    nikoUpgrade.sprite.setVisible(false);
+
     fishUpgrade = new Upgrade(500,
         this.add.image(550, 475, 'fish2').setInteractive({useHandCursor: true}),
-        '  Salmon:\n Increases fish per second by 25%. \n Costs 500 fish.'
+        '  Salmon:\n Increases fish per second by 25%. '
     );
     fishUpgrade.sprite.setVisible(false);
 
     octopusUpgrade = new Upgrade(800,
         this.add.image(550, 475, 'octopus').setInteractive({useHandCursor: true}),
-        '  Octopus:\n Increases FpS by another 25%. \n Costs 800 fish.'
+        '  Octopus:\n Increases FpS by another 25%. '
     );
     octopusUpgrade.sprite.setVisible(false);
 
     baitUpgrade = new Upgrade(700,
         this.add.image(700, 475, 'bait2').setInteractive({useHandCursor: true}),
-        '  Golden Bait:\n Increases fish per click by 50%. \n Costs 700 fish.'
+        '  Golden Bait:\n Increases fish per click by 50%. '
     )
     baitUpgrade.sprite.setVisible(false);
 
@@ -186,6 +208,7 @@ function create ()
     allUpgrades.push(fpcUpgrade);
     allUpgrades.push(yochanUpgrade);
     allUpgrades.push(neilUpgrade);
+    allUpgrades.push(nikoUpgrade);
     allUpgrades.push(fishUpgrade);
     allUpgrades.push(octopusUpgrade);
     allUpgrades.push(baitUpgrade);
@@ -209,12 +232,12 @@ function create ()
     this.input.setPollOnMove();
 
     this.input.on('gameobjectout', function (pointer, gameObject) {
-        fpsUpgrade.hover = false;
-        fpcUpgrade.hover = false;
-        yochanUpgrade.hover = false;
-        kyoro.hover = false;
-        yochan.hover = false;
-        neil.hover = false;
+        allSeals.forEach(function(s){
+            s.hover = false;
+        });
+        allUpgrades.forEach(function(u){
+            u.hover = false;
+        })
         toolTip.setVisible(false);
         toolTipText.setVisible(false);
     });
@@ -238,7 +261,7 @@ function create ()
             fps+=1;
             fpsUpgrade.cost+=10;
 
-            printUpgradedText(fpsUpgrade);
+            printUpgradedText(fpsUpgrade, upgradeTxtPool);
         }
     });
 
@@ -249,7 +272,7 @@ function create ()
             fpc+=1;
             fpcUpgrade.cost+=10;
 
-            printUpgradedText(fpcUpgrade);
+            printUpgradedText(fpcUpgrade, upgradeTxtPool);
         }
     });
 
@@ -277,10 +300,24 @@ function create ()
             neilUpgrade.level++;
             neil.sprite.visible = true;
             neilUpgrade.sprite.destroy();
+            nikoUpgrade.sprite.setVisible(true);
             toolTip.setVisible(false);
             toolTipText.setVisible(false);
         }
-    })
+    });
+
+    nikoUpgrade.sprite.on('pointerdown', ()=>{
+        if(score >= nikoUpgrade.cost){
+            score -= nikoUpgrade.cost;
+            speciesFound++;
+            babyNikoDex.achieved = true;
+            nikoUpgrade.level++;
+            niko.sprite.visible = true;
+            nikoUpgrade.sprite.destroy();
+            toolTip.setVisible(false);
+            toolTipText.setVisible(false);
+        }
+    });
 
     fishUpgrade.sprite.on('pointerdown', () => {
         if(score >= fishUpgrade.cost){
@@ -348,6 +385,7 @@ function create ()
             yochanDex.achieved = true;
             yochan.sprite.setTexture('yochansprite');
             yochan.sprite.anims.play('look');
+            fps += yochan.fps;
         }
         this.tweens.add({
             targets: yochan.sprite,
@@ -377,6 +415,7 @@ function create ()
             neilDex.achieved = true;
             neil.sprite.setTexture('neilsprite');
             neil.sprite.anims.play('rest');
+            fps += neil.fps;
         }
         this.tweens.add({
             targets: neil.sprite,
@@ -396,13 +435,43 @@ function create ()
                 })
             }
         });
+    });
+
+    niko.sprite.on('pointerdown', () => {
+        if(score >= niko.lvlUpCost && niko.stage === 'baby'){
+            score -= niko.lvlUpCost;
+            niko.lvl++;
+            niko.stage = 'adult';
+            nikoDex.achieved = true;
+            niko.sprite.setTexture('nikosprite');
+            niko.sprite.anims.play('frogblink');
+            fps += niko.fps;
+        }
+        this.tweens.add({
+            targets: niko.sprite,
+            y: '-=20',
+            ease: 'Cubic',
+            duration: 300,
+            repeat: 0,
+            yoyo: false,
+            onComplete: function(){
+                sc.tweens.add({
+                    targets: niko.sprite,
+                    y: 200,
+                    ease: 'Bounce',
+                    duration: 400,
+                    repeat: 0,
+                    yoyo: false
+                })
+            }
+        });
     })
 
     for (let d = 0; d < clickBuffer; d++) {
         let fish = this.add.image(400, 175, 'fish').setScale(0.5);
         fish.setVisible(false);
         fishPool.push(fish);
-    }
+    };
 
     // give fish when you click the ice hole
     icehole.on('pointerdown', () => {
@@ -445,8 +514,9 @@ function create ()
         })
     });
 
-    achievementsScreen = this.add.container(750, 345);
-    sealbookScreen = this.add.container(750, 345);
+    // set up achievements and sealbook
+    let achievementsScreen = this.add.container(750, 345);
+    let sealbookScreen = this.add.container(750, 345);
 
     achievementsScreen.setVisible(false);
     sealbookScreen.setVisible(false);
@@ -454,6 +524,7 @@ function create ()
     sealbookScreen.add(this.add.rectangle(0, 0, 800, 500, 0xffffff));
     achievementsScreen.add(this.add.rectangle(0, 0, 2000, 800, 0x000000).setAlpha(0.5).setInteractive());
     achievementsScreen.add(this.add.rectangle(0, 0, 800, 500, 0xffffff));
+
     let backButton = this.add.text(-350, -200, 'Back', {
         fontFamily: 'serif', 
         fontSize: '24px',
@@ -468,26 +539,35 @@ function create ()
     sealbookScreen.add(backButton2);
 
     speciesAchv = new Achievement(this.add.image(-280, -110, 'locked').setInteractive(), 'Locked', 'speciesachv');
+    thousandFishAchv = new Achievement(this.add.image(-180, -110, 'locked').setInteractive(), 'Locked', 'fish');
     allAchievements.push(speciesAchv);
+    allAchievements.push(thousandFishAchv);
 
-    kyoroDex = new DexEntry(kyoro, this.add.image(-280, -110, 'kyorosprite').setInteractive(), 'Locked', 'kyorosprite');
+    kyoroDex = new DexEntry(kyoro, this.add.sprite(-280, -110, 'kyorosprite').setInteractive(), 'Locked', 'kyorosprite', false);
     kyoroDex.achieved = true;
-    babyYoDex = new DexEntry(yochan, this.add.image(-180, -110, 'locked').setInteractive(), 'Locked', 'babysprite');
-    yochanDex = new DexEntry(yochan, this.add.image(-80, -110, 'locked').setInteractive(), 'Locked', 'yochansprite');
-    babyNeilDex = new DexEntry(neil, this.add.image(20, -110, 'locked').setInteractive(), 'Locked', 'babyneilsprite');
-    neilDex = new DexEntry(neil, this.add.image(120, -110, 'locked').setInteractive(), 'Locked', 'neilsprite');
+    babyYoDex = new DexEntry(yochan, this.add.sprite(-180, -110, 'locked').setInteractive(), 'Locked', 'babysprite', true);
+    yochanDex = new DexEntry(yochan, this.add.sprite(-80, -110, 'locked').setInteractive(), 'Locked', 'yochansprite', false);
+    babyNeilDex = new DexEntry(neil, this.add.sprite(20, -110, 'locked').setInteractive(), 'Locked', 'babyneilsprite', true);
+    neilDex = new DexEntry(neil, this.add.sprite(120, -110, 'locked').setInteractive(), 'Locked', 'neilsprite', false);
+    babyNikoDex = new DexEntry(niko, this.add.sprite(220, -110, 'locked').setInteractive(), 'Locked', 'babynikosprite', true);
+    nikoDex = new DexEntry(niko, this.add.sprite(320, -110, 'locked').setInteractive(), 'Locked', 'nikosprite', false);
     allDexEntries.push(kyoroDex);
     allDexEntries.push(babyYoDex);
     allDexEntries.push(yochanDex);
     allDexEntries.push(babyNeilDex);
     allDexEntries.push(neilDex);
+    allDexEntries.push(babyNikoDex);
+    allDexEntries.push(nikoDex);
     
     achievementsScreen.add(speciesAchv.sprite);
+    achievementsScreen.add(thousandFishAchv.sprite);
     sealbookScreen.add(kyoroDex.sprite);
     sealbookScreen.add(babyYoDex.sprite);
     sealbookScreen.add(yochanDex.sprite);
     sealbookScreen.add(babyNeilDex.sprite);
     sealbookScreen.add(neilDex.sprite);
+    sealbookScreen.add(babyNikoDex.sprite);
+    sealbookScreen.add(nikoDex.sprite);
 
     toolTip.depth = 20;
     toolTipText.depth = 20;
@@ -512,11 +592,26 @@ function create ()
         speciesAchv.onHover(toolTip, toolTipText, pointer);
     });
 
+    thousandFishAchv.sprite.on('pointermove', function(pointer){
+        thousandFishAchv.onHover(toolTip, toolTipText, pointer);
+    });
+
     allDexEntries.forEach(function(d){
         d.sprite.on('pointermove', function(pointer){
             d.onHover(toolTip, toolTipText, pointer);
-        })
-    })
+        });
+        d.sprite.on('pointerdown', () => {
+            if(d.baby && d.achieved){ 
+                d.sprite.anims.play(d.seal.babyAnimName);
+                d.sprite.anims.stopAfterRepeat(0);
+            }
+            else if(!d.baby && d.achieved){
+                d.sprite.anims.play(d.seal.adultAnimName);
+                d.sprite.anims.stopAfterRepeat(0);
+            }
+            
+        });
+    });
 
 }
 
@@ -529,16 +624,13 @@ function update (time, delta)
         timer -= 1000;
     }
 
-    if(fpsUpgrade.hover){
-        toolTipText.setText('  Fisherman:\nProduces 1 fish per second. \n Costs ' 
-            + fpsUpgrade.cost + ' fish. \n Quantity: ' + fpsUpgrade.level   
-        );
-    }    
-    if(fpcUpgrade.hover){
-        toolTipText.setText('  Bait:\nGives +1 fish per click. \n Costs ' 
-            + fpcUpgrade.cost + ' fish. \n Quantity: ' + fpcUpgrade.level
-        );
-    }
+    allUpgrades.forEach(function(u){
+        if(u.hover){
+            toolTipText.setText(u.text + '\nCosts ' + u.cost + ' fish. \n Quantity: ' 
+                + u.level
+            );
+        }
+    })
 
     allSeals.forEach(function(s){
         if(s.hover){
@@ -552,7 +644,7 @@ function update (time, delta)
                 toolTipText.appendText('Needs ' + s.lvlUpCost + ' fish to grow up.');
             }
             else if(s.stage === 'adult'){
-                toolTipText.appendText('All grown up!');
+                toolTipText.appendText('Adult. Catches ' + s.fps + ' fish per second.');
             }
         }
     });
@@ -561,6 +653,12 @@ function update (time, delta)
         speciesAchv.achieved = true;
         speciesAchv.sprite.setTexture(speciesAchv.achSprite);
         speciesAchv.text = 'Discover 2 seal species.';
+    }
+
+    if(scoreAllTime >= 1000 && !thousandFishAchv.achieved){
+        thousandFishAchv.achieved = true;
+        thousandFishAchv.sprite.setTexture(thousandFishAchv.achSprite);
+        thousandFishAchv.text = "Catch 1000 fish in total.";
     }
 
     allDexEntries.forEach(function(d){
@@ -576,7 +674,7 @@ function update (time, delta)
     }
 }
 
-function printUpgradedText(upgrade){
+function printUpgradedText(upgrade, upgradeTxtPool){
     if(i == clickBuffer){
         i = 0;
     }
@@ -622,8 +720,8 @@ function setupAnims(sc){
         frames: sc.anims.generateFrameNumbers('iceholesprite', {start: 0, end: 11}),
         frameRate: 10,
         repeat: -1,
-        repeatDelay: 7500
-    })
+        repeatDelay: 5500
+    });
 
     sc.anims.create({
         key: 'look',
@@ -632,7 +730,7 @@ function setupAnims(sc){
         repeat: -1,
         repeatDelay: 5000,
         yoyo: true
-    })
+    });
 
     sc.anims.create({
         key: 'banana',
@@ -641,7 +739,7 @@ function setupAnims(sc){
         repeat: -1,
         repeatDelay: 10000,
         yoyo: true
-    })
+    });
 
     sc.anims.create({
         key: 'rest',
@@ -650,5 +748,22 @@ function setupAnims(sc){
         repeat: -1,
         repeatDelay: 12000,
         yoyo: true
+    });
+
+    sc.anims.create({
+        key: 'rollover',
+        frames: sc.anims.generateFrameNumbers('babynikosprite', {start: 0, end: 6}),
+        frameRate: 10,
+        repeat: -1,
+        repeatDelay: 2500,
+        yoyo: true
+    });
+
+    sc.anims.create({
+        key: 'frogblink',
+        frames: sc.anims.generateFrameNumbers('nikosprite', {start: 0, end: 12}),
+        frameRate: 10,
+        repeat: -1,
+        repeatDelay: 2000
     })
 }

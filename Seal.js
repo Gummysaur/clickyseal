@@ -8,8 +8,11 @@ export default class Seal{
     sprite;
     hover;
     stage;
+    fps;
+    babyAnimName;
+    adultAnimName;
 
-    constructor(name, species, gender, lvlUpCost, text, sprite, stage){
+    constructor(name, species, gender, lvlUpCost, text, sprite, stage, fps, babyAnimName, adultAnimName){
         this.name = name;
         this.species = species;
         this.gender = gender;
@@ -18,6 +21,9 @@ export default class Seal{
         this.sprite = sprite;
         this.stage = stage;
         this.hover = false;
+        this.fps = fps;
+        this.babyAnimName = babyAnimName;
+        this.adultAnimName = adultAnimName;
     }
 
     onHover(toolTip, toolTipText, pointer){

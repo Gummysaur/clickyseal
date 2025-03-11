@@ -6,12 +6,14 @@ export default class DexEntry{
     achSprite; // string containing the name of the asset this achievement has when unlocked
     text;
     handled;
+    baby;
 
-    constructor(seal, sprite, text, achSprite){
+    constructor(seal, sprite, text, achSprite, baby){
         this.seal = seal;
         this.sprite = sprite;
         this.text = text;
         this.achSprite = achSprite;
+        this.baby = baby;
 
         this.hover = false;
         this.achieved = false;
