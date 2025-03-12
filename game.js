@@ -3,7 +3,7 @@ import Seal from "./Seal.js";
 import Achievement from "./Achievement.js"
 import DexEntry from "./DexEntry.js"
 
-let score = 7000;
+let score = 0;
 let scoreAllTime = 0;
 let fpc = 1; // fish per click
 let fps = 0; // idle fish gained per second
@@ -540,8 +540,10 @@ function create ()
 
     speciesAchv = new Achievement(this.add.image(-280, -110, 'locked').setInteractive(), 'Locked', 'speciesachv');
     thousandFishAchv = new Achievement(this.add.image(-180, -110, 'locked').setInteractive(), 'Locked', 'fish');
+    juggleAchv = new Achievement(this.add.image(-80, -110, 'locked').setInteractive(), 'Locked', 'juggleachv');
     allAchievements.push(speciesAchv);
     allAchievements.push(thousandFishAchv);
+    allAchievements.push(juggleAchv);
 
     kyoroDex = new DexEntry(kyoro, this.add.sprite(-280, -110, 'kyorosprite').setInteractive(), 'Locked', 'kyorosprite', false);
     kyoroDex.achieved = true;
@@ -559,15 +561,13 @@ function create ()
     allDexEntries.push(babyNikoDex);
     allDexEntries.push(nikoDex);
     
-    achievementsScreen.add(speciesAchv.sprite);
-    achievementsScreen.add(thousandFishAchv.sprite);
-    sealbookScreen.add(kyoroDex.sprite);
-    sealbookScreen.add(babyYoDex.sprite);
-    sealbookScreen.add(yochanDex.sprite);
-    sealbookScreen.add(babyNeilDex.sprite);
-    sealbookScreen.add(neilDex.sprite);
-    sealbookScreen.add(babyNikoDex.sprite);
-    sealbookScreen.add(nikoDex.sprite);
+    allAchievements.forEach(function(a){
+        achievementsScreen.add(a.sprite);
+    })
+
+    allDexEntries.forEach(function(d){
+        sealbookScreen.add(d.sprite);
+    })
 
     toolTip.depth = 20;
     toolTipText.depth = 20;
@@ -588,13 +588,11 @@ function create ()
         sealbookScreen.setVisible(true);
     })
 
-    speciesAchv.sprite.on('pointermove', function(pointer){
-        speciesAchv.onHover(toolTip, toolTipText, pointer);
-    });
-
-    thousandFishAchv.sprite.on('pointermove', function(pointer){
-        thousandFishAchv.onHover(toolTip, toolTipText, pointer);
-    });
+    allAchievements.forEach(function(a){
+        a.sprite.on('pointermove', function(pointer){
+            a.onHover(toolTip, toolTipText, pointer);
+        })
+    })
 
     allDexEntries.forEach(function(d){
         d.sprite.on('pointermove', function(pointer){
@@ -659,6 +657,16 @@ function update (time, delta)
         thousandFishAchv.achieved = true;
         thousandFishAchv.sprite.setTexture(thousandFishAchv.achSprite);
         thousandFishAchv.text = "Catch 1000 fish in total.";
+    }
+
+    if(!juggleAchv.achieved){
+        allSeals.forEach(function(s){
+            if(s.sprite.y < 175){
+                juggleAchv.achieved = true;
+                juggleAchv.sprite.setTexture(juggleAchv.achSprite);
+                juggleAchv.text = 'Juggle any seal above the icehole.';
+            }
+        });
     }
 
     allDexEntries.forEach(function(d){
