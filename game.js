@@ -30,9 +30,11 @@ let fishUpgrade;
 let octopusUpgrade;
 let baitUpgrade;
 let nikoUpgrade;
+let trumpetUpgrade;
 
 // achivement variables
 let speciesAchv;
+let speciesAchv2;
 let speciesFound = 1;
 let thousandFishAchv;
 let juggleAchv;
@@ -45,6 +47,8 @@ let babyNeilDex;
 let neilDex;
 let babyNikoDex;
 let nikoDex;
+let babyTrumpetDex;
+let trumpetDex;
 
 // game object arrays
 let allSeals = [];
@@ -99,6 +103,8 @@ function preload ()
     this.load.spritesheet('neilsprite', 'assets/neilsprite.png', {frameWidth: 98, frameHeight: 98});
     this.load.spritesheet('babynikosprite', 'assets/babynikosprite.png', {frameWidth: 98, frameHeight: 98});
     this.load.spritesheet('nikosprite', 'assets/nikosprite.png', {frameWidth: 98, frameHeight: 98});
+    this.load.spritesheet('babytrumpetsprite', 'assets/babytrumpetsprite.png', {frameWidth: 98, frameHeight: 98});
+    this.load.spritesheet('trumpetsprite', 'assets/trumpetsprite.png', {frameWidth: 98, frameHeight: 98});
 }
 
 function create ()
@@ -150,14 +156,22 @@ function create ()
     let niko = new Seal('Niko', 'Baikal Seal', 'Male', 1500, 'A silly, quirky seal.', 
         this.add.sprite(180, 200, 'babynikosprite').setInteractive({useHandCursor: true}), 'baby', 15,
         'rollover', 'frogblink'
-    )
+    );
     niko.sprite.setVisible(false);
     niko.sprite.anims.play('rollover');
+
+    let trumpet = new Seal('Trumpet', 'Harbor Seal', 'Female', 2000, 'A friendly, playful seal.', 
+        this.add.sprite(580, 200, 'babytrumpetsprite').setInteractive({useHandCursor: true}), 'baby', 20,
+        'fiddle', 'jumpa'
+    );
+    trumpet.sprite.setVisible(false);
+    trumpet.sprite.anims.play('fiddle');
 
     allSeals.push(kyoro);
     allSeals.push(yochan);
     allSeals.push(neil);
     allSeals.push(niko);
+    allSeals.push(trumpet);
 
     fpsUpgrade = new Upgrade(10, 
         this.add.image(100, 475, 'fisherman').setInteractive({ useHandCursor: true }),
@@ -186,6 +200,12 @@ function create ()
     );
     nikoUpgrade.sprite.setVisible(false);
 
+    trumpetUpgrade = new Upgrade(1500,
+        this.add.image(400, 475, 'newseal').setInteractive({useHandCursor: true}),
+        '  Seal: \n Yet another new seal for you! '
+    );
+    trumpetUpgrade.sprite.setVisible(false);
+
     fishUpgrade = new Upgrade(500,
         this.add.image(550, 475, 'fish2').setInteractive({useHandCursor: true}),
         '  Salmon:\n Increases fish per second by 25%. '
@@ -209,6 +229,7 @@ function create ()
     allUpgrades.push(yochanUpgrade);
     allUpgrades.push(neilUpgrade);
     allUpgrades.push(nikoUpgrade);
+    allUpgrades.push(trumpetUpgrade);
     allUpgrades.push(fishUpgrade);
     allUpgrades.push(octopusUpgrade);
     allUpgrades.push(baitUpgrade);
@@ -312,8 +333,22 @@ function create ()
             speciesFound++;
             babyNikoDex.achieved = true;
             nikoUpgrade.level++;
-            niko.sprite.visible = true;
+            niko.sprite.setVisible(true);
             nikoUpgrade.sprite.destroy();
+            trumpetUpgrade.sprite.setVisible(true);
+            toolTip.setVisible(false);
+            toolTipText.setVisible(false);
+        }
+    });
+
+    trumpetUpgrade.sprite.on('pointerdown', ()=>{
+        if(score >= trumpetUpgrade.cost){
+            score -= trumpetUpgrade.cost;
+            speciesFound++;
+            babyTrumpetDex.achieved = true;
+            trumpetUpgrade.level++;
+            trumpet.sprite.setVisible(true);
+            trumpetUpgrade.sprite.destroy();
             toolTip.setVisible(false);
             toolTipText.setVisible(false);
         }
@@ -465,6 +500,36 @@ function create ()
                 })
             }
         });
+    });
+
+    trumpet.sprite.on('pointerdown', () => {
+        if(score >= trumpet.lvlUpCost && trumpet.stage === 'baby'){
+            score -= trumpet.lvlUpCost;
+            trumpet.lvl++;
+            trumpet.stage = 'adult';
+            trumpetDex.achieved = true;
+            trumpet.sprite.setTexture('trumpetsprite');
+            trumpet.sprite.anims.play('jumpa');
+            fps += trumpet.fps;
+        }
+        this.tweens.add({
+            targets: trumpet.sprite,
+            y: '-=30',
+            ease: 'Cubic',
+            duration: 300,
+            repeat: 0,
+            yoyo: false,
+            onComplete: function(){
+                sc.tweens.add({
+                    targets: trumpet.sprite,
+                    y: 200,
+                    ease: 'Bounce',
+                    duration: 300,
+                    repeat: 0,
+                    yoyo: false
+                })
+            }
+        });
     })
 
     for (let d = 0; d < clickBuffer; d++) {
@@ -541,9 +606,11 @@ function create ()
     speciesAchv = new Achievement(this.add.image(-280, -110, 'locked').setInteractive(), 'Locked', 'speciesachv');
     thousandFishAchv = new Achievement(this.add.image(-180, -110, 'locked').setInteractive(), 'Locked', 'fish');
     juggleAchv = new Achievement(this.add.image(-80, -110, 'locked').setInteractive(), 'Locked', 'juggleachv');
+    speciesAchv2 = new Achievement(this.add.image(20, -110, 'locked').setInteractive(), 'Locked', 'speciesachv');
     allAchievements.push(speciesAchv);
     allAchievements.push(thousandFishAchv);
     allAchievements.push(juggleAchv);
+    allAchievements.push(speciesAchv2);
 
     kyoroDex = new DexEntry(kyoro, this.add.sprite(-280, -110, 'kyorosprite').setInteractive(), 'Locked', 'kyorosprite', false);
     kyoroDex.achieved = true;
@@ -553,6 +620,9 @@ function create ()
     neilDex = new DexEntry(neil, this.add.sprite(120, -110, 'locked').setInteractive(), 'Locked', 'neilsprite', false);
     babyNikoDex = new DexEntry(niko, this.add.sprite(220, -110, 'locked').setInteractive(), 'Locked', 'babynikosprite', true);
     nikoDex = new DexEntry(niko, this.add.sprite(320, -110, 'locked').setInteractive(), 'Locked', 'nikosprite', false);
+    babyTrumpetDex = new DexEntry(trumpet, this.add.sprite(-280, -10, 'locked').setInteractive(), 'Locked', 'babytrumpetsprite', true);
+    trumpetDex = new DexEntry(trumpet, this.add.sprite(-180, -10, 'locked').setInteractive(), 'Locked', 'trumpetsprite', false);
+
     allDexEntries.push(kyoroDex);
     allDexEntries.push(babyYoDex);
     allDexEntries.push(yochanDex);
@@ -560,6 +630,8 @@ function create ()
     allDexEntries.push(neilDex);
     allDexEntries.push(babyNikoDex);
     allDexEntries.push(nikoDex);
+    allDexEntries.push(babyTrumpetDex);
+    allDexEntries.push(trumpetDex);
     
     allAchievements.forEach(function(a){
         achievementsScreen.add(a.sprite);
@@ -651,6 +723,11 @@ function update (time, delta)
         speciesAchv.achieved = true;
         speciesAchv.sprite.setTexture(speciesAchv.achSprite);
         speciesAchv.text = 'Discover 2 seal species.';
+    }
+    if(speciesFound >= 4 && !speciesAchv2.achieved){
+        speciesAchv2.achieved = true;
+        speciesAchv2.sprite.setTexture(speciesAchv2.achSprite).setTint(0x00ffff);
+        speciesAchv2.text = 'Discover 4 seal species.';
     }
 
     if(scoreAllTime >= 1000 && !thousandFishAchv.achieved){
@@ -773,5 +850,22 @@ function setupAnims(sc){
         frameRate: 10,
         repeat: -1,
         repeatDelay: 2000
-    })
+    });
+
+    sc.anims.create({
+        key: 'fiddle',
+        frames: sc.anims.generateFrameNumbers('babytrumpetsprite', {start: 0, end: 5}),
+        frameRate: 10,
+        repeat: -1,
+        repeatDelay: 1500,
+        yoyo: true
+    });
+
+    sc.anims.create({
+        key: 'jumpa',
+        frames: sc.anims.generateFrameNumbers('trumpetsprite', {start: 0, end: 10}),
+        frameRate: 10,
+        repeat: -1,
+        repeatDelay: 2200
+    });
 }
