@@ -20,6 +20,8 @@ let fpsBoard;
 let timer = 0; // counts when a second has passed
 let toolTip;
 let toolTipText;
+let achvTip;
+let achvTipText;
 
 // upgrade objects
 let fpsUpgrade;
@@ -133,6 +135,20 @@ function create ()
     let icehole = this.add.sprite(400, 175, 'iceholesprite').setInteractive({ useHandCursor: true });
     icehole.anims.play('water');
 
+    let clickit = this.add.text(430, 165, '<- Click Here!', {
+        fontFamily: 'serif',
+        fontSize: '20px',
+        fontStyle: 'italic',
+        stroke: '#000', 
+        strokeThickness: 5
+    });
+    this.tweens.add({
+        targets: clickit,
+        alpha: 0,
+        duration: 1000,
+        delay: 2000
+    });
+
     let kyoro = new Seal("Kyoro", "Spotted Seal", 'Female', -1, 'A shy and curious seal.',
         this.add.sprite(400, 300, 'kyorosprite').setInteractive({ useHandCursor: true }), 'adult', 0,
         'none', 'blink'
@@ -236,6 +252,8 @@ function create ()
 
     toolTip =  this.add.rectangle(900, 700, 300, 100, 0xffffff).setOrigin(0).setVisible(false);
     toolTipText = this.add.text(900, 700, 'placeholder', { fontFamily: 'Arial', color: '#000' }).setOrigin(0).setVisible(false);
+    achvTip = this.add.rectangle(185, 20, 500, 50, 0xffffff).setOrigin(0).setAlpha(0);
+    achvTipText = this.add.text(210, 35, 'placeholder', {fontFamily: 'Arial', color: '#000'}).setOrigin(0).setAlpha(0);
     
     for (let d = 0; d < clickBuffer; d++) {
         let upgradeText = this.add.text(900, 700, 'Upgraded!', { fontFamily: 'Arial', color: '#000' }).setOrigin(0).setVisible(false);
@@ -723,17 +741,23 @@ function update (time, delta)
         speciesAchv.achieved = true;
         speciesAchv.sprite.setTexture(speciesAchv.achSprite);
         speciesAchv.text = 'Discover 2 seal species.';
+        printAchievement(sc, speciesAchv);
+
     }
     if(speciesFound >= 4 && !speciesAchv2.achieved){
         speciesAchv2.achieved = true;
         speciesAchv2.sprite.setTexture(speciesAchv2.achSprite).setTint(0x00ffff);
         speciesAchv2.text = 'Discover 4 seal species.';
+        printAchievement(sc, speciesAchv2);
+
     }
 
     if(scoreAllTime >= 1000 && !thousandFishAchv.achieved){
         thousandFishAchv.achieved = true;
         thousandFishAchv.sprite.setTexture(thousandFishAchv.achSprite);
         thousandFishAchv.text = "Catch 1000 fish in total.";
+        printAchievement(sc, thousandFishAchv);
+
     }
 
     if(!juggleAchv.achieved){
@@ -742,6 +766,7 @@ function update (time, delta)
                 juggleAchv.achieved = true;
                 juggleAchv.sprite.setTexture(juggleAchv.achSprite);
                 juggleAchv.text = 'Juggle any seal above the icehole.';
+                printAchievement(sc, juggleAchv);
             }
         });
     }
@@ -867,5 +892,25 @@ function setupAnims(sc){
         frameRate: 10,
         repeat: -1,
         repeatDelay: 2200
+    });
+}
+
+function printAchievement(sc, achv){
+    achvTipText.setText('Achievement Unlocked: ' + achv.text);
+    sc.tweens.add({
+        targets: [achvTipText, achvTip],
+        y: '-=5',
+        ease: 'Cubic',
+        alpha: 1,
+        duration: 3000,
+        onComplete: function(){
+            sc.tweens.add({
+                targets: [achvTipText, achvTip],
+                y: '+=5',
+                ease: 'Cubic',
+                alpha: 0,
+                duration: 1000
+            });
+        }
     });
 }
